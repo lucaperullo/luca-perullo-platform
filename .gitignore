@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# remotion render artifacts
+/tmp/
+/public/scroll-video/*.webp
+
+# claude code local state (per-machine; not portable)
+/.claude/

@@ -6,12 +6,33 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "remotion": "remotion studio",
+    "remotion:render": "remotion render scroll-video-left tmp/scroll-left.mp4",
+    "render:scroll": "bash scripts/render-scroll-video.sh",
+    "extract:right": "bash scripts/extract-mp4-frames.sh public/scroll_video.mp4 right",
+    "extract:left": "bash scripts/extract-mp4-frames.sh public/scroll_video.mp4 left"
   },
   "dependencies": {
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.6.1",
+    "@react-three/postprocessing": "^3.0.4",
+    "@remotion/cli": "^4.0.457",
+    "@remotion/google-fonts": "^4.0.457",
+    "@tailwindcss/typography": "^0.5.19",
+    "@types/three": "^0.184.0",
+    "clsx": "^2.1.1",
+    "gray-matter": "^4.0.3",
+    "lenis": "^1.3.23",
+    "lucide-react": "^1.14.0",
     "next": "16.2.4",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
+    "remotion": "^4.0.457",
+    "tailwind-merge": "^3.5.0",
+    "three": "^0.184.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

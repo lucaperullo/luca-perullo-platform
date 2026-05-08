@@ -1,26 +1,483 @@
 @import "tailwindcss";
 
+/* ─────────────────────────────────────────────────────────────
+   Brand foundation — chanhdai-inspired light-default surface.
+   - zinc-anchored neutral palette
+   - Geist Sans for type, Geist Mono for labels/code/metadata
+   - 1px hairlines, narrow content column, stripe-pattern dividers
+   Inverted set under .dark for the toggle.
+   ───────────────────────────────────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #ffffff;
+  --bg-alt: #fafafa;            /* zinc-50 */
+  --fg: #09090b;                /* zinc-950 */
+  --fg-muted: #71717a;          /* zinc-500 */
+  --fg-soft: #a1a1aa;            /* zinc-400 */
+  --border: #e4e4e7;             /* zinc-200 */
+  --border-strong: #d4d4d8;      /* zinc-300 */
+  --accent: #2b7fff;             /* blue-500 — verified badge */
+  --accent-fg: #ffffff;
+  --stripe: rgba(0, 0, 0, 0.06);
+  --grid-dot: rgba(0, 0, 0, 0.18);
+}
+
+.dark {
+  /* AMOLED black for the page surface — true #000 lets video assets with
+     dark backgrounds bleed into the page seamlessly (no tonal mismatch),
+     and OLED/AMOLED displays actually power down those pixels. */
+  --bg: #000000;
+  /* One-tier elevation surface for cards, chips, code blocks. Stays at
+     zinc-900 so contrast against pure-black bg is still tangible. */
+  --bg-alt: #18181b;             /* zinc-900 */
+  --fg: #fafafa;                 /* zinc-50 */
+  --fg-muted: #a1a1aa;           /* zinc-400 */
+  --fg-soft: #52525b;             /* zinc-600 */
+  --border: #27272a;              /* zinc-800 */
+  --border-strong: #3f3f46;       /* zinc-700 */
+  --accent: #60a5fa;              /* blue-400 */
+  --accent-fg: #000000;           /* matches new bg */
+  --stripe: rgba(255, 255, 255, 0.06);
+  --grid-dot: rgba(255, 255, 255, 0.16);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-bg: var(--bg);
+  --color-bg-alt: var(--bg-alt);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-soft: var(--fg-soft);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-accent: var(--accent);
+  --color-accent-fg: var(--accent-fg);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  --container-prose: 672px;       /* chanhdai's narrow column */
+  --container-frame: 800px;        /* slightly wider for header/footer alignment */
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  color-scheme: light;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html.dark {
+  color-scheme: dark;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  font-feature-settings: "ss01", "cv11";
+  /* `clip` instead of `hidden` so fixed-positioned children
+     (e.g. SideLines) keep their viewport-relative anchoring and
+     don't get a new containing block. Suppresses the horizontal
+     scrollbar that 100vw children would otherwise trigger. */
+  overflow-x: clip;
+}
+
+/* Stripe section divider — diagonal hatch a la chanhdai. */
+@utility stripe-rule {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    var(--stripe) 0,
+    var(--stripe) 1px,
+    transparent 1px,
+    transparent 6px
+  );
+}
+
+/* Subtle dotted-grid backdrop — used behind the hero monogram. */
+@utility grid-dots {
+  background-image: radial-gradient(
+    var(--grid-dot) 1px,
+    transparent 1px
+  );
+  background-size: 18px 18px;
+  background-position: 0 0;
+}
+
+/* Small mono caption, used for section labels and metadata. */
+@utility caption-mono {
+  font-family: var(--font-mono), ui-monospace, "SF Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
+  font-size: 12px;
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+  color: var(--fg-muted);
+}
+
+/* Full-bleed hairlines that extend past the content column.
+   Inspired by chanhdai.com — give the page an editorial "screen line" feel. */
+@utility screen-line-top {
+  position: relative;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100vw;
+    z-index: -1;
+    height: 1px;
+    width: 200vw;
+    background: var(--border);
+  }
+}
+
+@utility screen-line-bottom {
+  position: relative;
+
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: -100vw;
+    z-index: -1;
+    height: 1px;
+    width: 200vw;
+    background: var(--border);
+  }
+}
+
+/* Full-bleed row dividers — for list items inside the prose column.
+   Renders a 1px line that extends to the viewport edges (200vw) so it
+   meets the vertical SideLines hairlines on each gutter. Sits on top
+   of parent backgrounds (z-index: 1) so hover surfaces don't occlude.
+
+   Pair `row-rule` (bottom border on every row) with `row-rule-top`
+   on the first row only — gives a closed, gridded list. */
+@utility row-rule {
+  position: relative;
+
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: -1px;
+    left: 50%;
+    transform: translateX(-50%);
+    height: 1px;
+    width: 100vw;
+    background: var(--border);
+    pointer-events: none;
+    z-index: 1;
+  }
+}
+
+@utility row-rule-top {
+  &::before {
+    content: "";
+    position: absolute;
+    top: -1px;
+    left: 50%;
+    transform: translateX(-50%);
+    height: 1px;
+    width: 100vw;
+    background: var(--border);
+    pointer-events: none;
+    z-index: 1;
+  }
+}
+
+/* Layered icon ring used in component / tool catalogs.
+   Mimics chanhdai's "icon disc with ring offset" treatment. */
+@utility icon-ring {
+  border: 1px solid color-mix(in srgb, var(--fg-soft) 35%, transparent);
+  background: var(--bg-alt);
+  box-shadow:
+    0 0 0 1px var(--bg),
+    0 0 0 2px var(--border);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Motion foundation — Emil Kowalski playbook.
+   - Custom easing curves (built-ins are too weak for UI)
+   - Marquee keyframe (linear, infinite, transform-only)
+   - Draw-in keyframe for SVG path stroke reveal
+   - prefers-reduced-motion guard collapses heavy motion
+   ───────────────────────────────────────────────────────────── */
+:root {
+  /* Strong ease-out — for elements entering/responding (most UI). */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  /* Strong ease-in-out — for on-screen movement / morph. */
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  /* iOS drawer curve — for sheet-like / overlay transitions. */
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
+  /* Marquee tuning — overrideable per instance via inline style. */
+  --marquee-duration: 36s;
+  --marquee-gap: 1.5rem;
+}
+
+@keyframes marquee-x {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(calc(-50% - var(--marquee-gap) / 2), 0, 0); }
+}
+
+@keyframes marquee-y {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(0, calc(-50% - var(--marquee-gap) / 2), 0); }
+}
+
+@keyframes draw-in {
+  from { stroke-dashoffset: var(--draw-len, 200); }
+  to   { stroke-dashoffset: 0; }
+}
+
+@keyframes count-rise {
+  from { transform: translate3d(0, 0.6em, 0); opacity: 0; filter: blur(2px); }
+  to   { transform: translate3d(0, 0, 0); opacity: 1; filter: blur(0); }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Fly — walking-only behaviour.
+
+   Each leg is wrapped:
+     <g translate="root">           ← positions the leg
+       <g class="fly-leg-anim-…">   ← animated. Rotations pivot
+                                      around (0,0) of this g, which
+                                      coincides with the leg's root.
+
+   Two animation layers compose by mode:
+     • Walking gait: tripod alternation — fore-r/mid-l/hind-r vs
+       fore-l/mid-r/hind-l swing in opposite phase. Active during
+       walk + scurry.
+     • Grooming overrides specific legs with mode-specific keyframes.
+   ───────────────────────────────────────────────────────────── */
+
+/* Drop-shadow — Calliphora vomitoria (blue-bottle fly) metallic
+   chitin reads as iridescent on both light and dark pages.
+   Shadow takes a slight cyan/blue tint to lift the colour. */
+.fly {
+  filter:
+    drop-shadow(0 0 1.5px rgba(34, 211, 238, 0.35))      /* cyan halo */
+    drop-shadow(0 1.5px 1.5px rgba(0, 0, 0, 0.30));
+}
+.dark .fly {
+  filter:
+    drop-shadow(0 0 2px rgba(34, 211, 238, 0.55))
+    drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.55));
+}
+
+/* Body fill is set inline in JSX (per variant + per-instance gradient
+   ID), so no CSS rule is needed here. Variants supported:
+   housefly · blue-bottle · green-bottle · fruit-fly */
+
+/* Static rendering — used in the component-library preview. Disable
+   the walking sway/bob keyframe and freeze the fly in resting pose. */
+.fly-static svg {
+  animation: none !important;
+}
+
+/* Wings — three layers per wing for genuine translucent appearance.
+
+   Real housefly wings are smoke-grey membranes with a fine vein
+   network. To get this on screen we stack:
+
+   1. **fly-wing-haze**  — a Gaussian-blurred background shape that
+      gives the membrane a soft fringe (no sharp logo boundary).
+   2. **fly-wing**        — the membrane itself, filled with a radial
+      gradient (lighter centre → darker edge) so it reads as a curved
+      surface, not a flat sticker. Strong outline for shape clarity.
+   3. **fly-wing-veins**  — anatomical vein network (8 longitudinal
+      + 4 cross-veins matching real Musca venation), with thicker
+      costa as the leading edge.
+
+   Theme-aware via `.dark` overrides: light wings on dark body in
+   light mode, dark wings on light body in dark mode. */
+
+.fly-wing-haze {
+  fill: #94a3b8;           /* slate-400 — softer than membrane */
+  fill-opacity: 0.16;
+  stroke: none;
+}
+.dark .fly-wing-haze {
+  fill: #475569;           /* slate-600 for dark bg */
+  fill-opacity: 0.2;
+}
+
+/* Wing membrane fill is set inline in JSX (per-instance gradient IDs).
+   Only the stroke / outline is defined here. */
+.fly-wing-r,
+.fly-wing-l {
+  stroke: #475569;          /* slate-600 outline */
+  stroke-opacity: 1;
+  stroke-width: 0.45;
+  stroke-linejoin: round;
+}
+.dark .fly-wing-r,
+.dark .fly-wing-l {
+  stroke: #cbd5e1;          /* slate-300 outline for dark mode */
+  stroke-opacity: 0.85;
+}
+
+.fly-wing-veins path {
+  stroke: #1e293b;          /* slate-800 — visible vein detail */
+  stroke-opacity: 0.8;
+  stroke-width: 0.28;
+  stroke-linecap: round;
+  fill: none;
+}
+.fly-wing-veins .fly-vein-costa {
+  stroke-width: 0.4;        /* leading edge slightly thicker */
+  stroke-opacity: 1;
+}
+.dark .fly-wing-veins path {
+  stroke: #e2e8f0;          /* slate-200 for dark mode */
+  stroke-opacity: 0.65;
+}
+.dark .fly-wing-veins .fly-vein-costa {
+  stroke-opacity: 0.85;
+}
+
+/* Body sway — perpendicular sway tracks tripod alternation, plus a
+   smaller forward-axis pitch from each push-off. Two stacked keyframes
+   on different elements (svg + .fly-wings) so they don't overwrite. */
+@keyframes walk-sway {
+  0%, 100% { transform: translateY(0)      rotate(0deg); }
+  25%      { transform: translateY(-0.55px) rotate(-1.2deg); }
+  50%      { transform: translateY(0)      rotate(0deg); }
+  75%      { transform: translateY(0.55px)  rotate(1.2deg); }
+}
+.fly[data-mode="walk"] svg {
+  animation: walk-sway 360ms infinite cubic-bezier(0.45, 0, 0.55, 1);
+}
+.fly[data-mode="scurry"] svg {
+  animation: walk-sway 140ms infinite cubic-bezier(0.45, 0, 0.55, 1);
+}
+
+.fly-legs {
+  opacity: 0.95;
+}
+
+/* Walking gait now handled procedurally in JS (fly.tsx tick loop):
+   each frame we recompute the foot + knee positions per leg, with
+   forward oscillation along the body x-axis and foot foreshortening
+   during the swing phase to fake the 3D lift. CSS only handles the
+   grooming overlays below. */
+
+/* ─── Grooming animations ────────────────────────────────────
+   Multi-step keyframes with intermediate positions for fluidity.
+   Asymmetric easing (cubic-bezier) gives natural acceleration. */
+
+/* Foreleg rub — both front legs cross at the head, scrubbing back-and-forth */
+@keyframes groom-fore-r {
+  0%   { transform: rotate(-30deg) translateX(0); }
+  35%  { transform: rotate(-45deg) translateX(-1px); }
+  50%  { transform: rotate(-50deg) translateX(-1.5px); }
+  70%  { transform: rotate(-25deg) translateX(0.5px); }
+  100% { transform: rotate(-30deg) translateX(0); }
+}
+@keyframes groom-fore-l {
+  0%   { transform: rotate(30deg) translateX(0); }
+  35%  { transform: rotate(45deg) translateX(-1px); }
+  50%  { transform: rotate(50deg) translateX(-1.5px); }
+  70%  { transform: rotate(25deg) translateX(0.5px); }
+  100% { transform: rotate(30deg) translateX(0); }
+}
+.fly[data-mode="groom-fore"] .fly-leg-anim-fore-r {
+  animation: groom-fore-r 320ms infinite cubic-bezier(0.4, 0, 0.6, 1);
+}
+.fly[data-mode="groom-fore"] .fly-leg-anim-fore-l {
+  animation: groom-fore-l 320ms infinite cubic-bezier(0.4, 0, 0.6, 1) -160ms;
+}
+
+/* Hindleg rub — both rear legs scrub at the back of the abdomen */
+@keyframes groom-hind-r {
+  0%   { transform: rotate(15deg) translateX(0); }
+  35%  { transform: rotate(35deg) translateX(1px); }
+  50%  { transform: rotate(40deg) translateX(1.5px); }
+  70%  { transform: rotate(20deg) translateX(0.5px); }
+  100% { transform: rotate(15deg) translateX(0); }
+}
+@keyframes groom-hind-l {
+  0%   { transform: rotate(-15deg) translateX(0); }
+  35%  { transform: rotate(-35deg) translateX(1px); }
+  50%  { transform: rotate(-40deg) translateX(1.5px); }
+  70%  { transform: rotate(-20deg) translateX(0.5px); }
+  100% { transform: rotate(-15deg) translateX(0); }
+}
+.fly[data-mode="groom-hind"] .fly-leg-anim-hind-r {
+  animation: groom-hind-r 340ms infinite cubic-bezier(0.4, 0, 0.6, 1);
+}
+.fly[data-mode="groom-hind"] .fly-leg-anim-hind-l {
+  animation: groom-hind-l 340ms infinite cubic-bezier(0.4, 0, 0.6, 1) -170ms;
+}
+
+/* Head clean — one foreleg sweeps over the head, then back */
+@keyframes groom-head-r {
+  0%   { transform: rotate(0deg); }
+  20%  { transform: rotate(-30deg); }
+  40%  { transform: rotate(-55deg); }
+  55%  { transform: rotate(-65deg); }
+  75%  { transform: rotate(-30deg); }
+  100% { transform: rotate(0deg); }
+}
+@keyframes groom-head-l {
+  0%   { transform: rotate(0deg); }
+  20%  { transform: rotate(30deg); }
+  40%  { transform: rotate(55deg); }
+  55%  { transform: rotate(65deg); }
+  75%  { transform: rotate(30deg); }
+  100% { transform: rotate(0deg); }
+}
+.fly[data-mode="groom-head"] .fly-leg-anim-fore-r {
+  animation: groom-head-r 580ms infinite cubic-bezier(0.4, 0, 0.6, 1);
+}
+.fly[data-mode="groom-head"] .fly-leg-anim-fore-l {
+  animation: groom-head-l 580ms infinite cubic-bezier(0.4, 0, 0.6, 1) -290ms;
+}
+
+/* Wing clean — one hindleg arcs over the folded wing */
+@keyframes groom-wings-r {
+  0%   { transform: rotate(0deg); }
+  25%  { transform: rotate(-25deg); }
+  50%  { transform: rotate(-55deg); }
+  65%  { transform: rotate(-65deg); }
+  85%  { transform: rotate(-25deg); }
+  100% { transform: rotate(0deg); }
+}
+@keyframes groom-wings-l {
+  0%   { transform: rotate(0deg); }
+  25%  { transform: rotate(25deg); }
+  50%  { transform: rotate(55deg); }
+  65%  { transform: rotate(65deg); }
+  85%  { transform: rotate(25deg); }
+  100% { transform: rotate(0deg); }
+}
+.fly[data-mode="groom-wings"] .fly-leg-anim-hind-r {
+  animation: groom-wings-r 640ms infinite cubic-bezier(0.4, 0, 0.6, 1);
+}
+.fly[data-mode="groom-wings"] .fly-leg-anim-hind-l {
+  animation: groom-wings-l 640ms infinite cubic-bezier(0.4, 0, 0.6, 1) -320ms;
+}
+
+/* When the user has motion concerns, neutralise heavy motion but keep
+   colour / opacity transitions that aid comprehension. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Tactile press feedback for any pressable element. Use sparingly
+   (buttons that are *clicked*, not text). Pairs with custom ease-out.
+   ────────
+   Touch note: Tailwind v4's `hover:` variant already wraps in
+   @media (hover: hover) automatically, so do NOT use the arbitrary
+   `[@media(hover:hover)and(pointer:fine)]:` modifier in components —
+   it emits invalid CSS in lightningcss (`and` adjacent to `)` without
+   whitespace tokenises as a function call). Plain `hover:` is correct. */
+@utility press {
+  transition: transform 160ms var(--ease-out);
+
+  &:active {
+    transform: scale(0.97);
+  }
 }
