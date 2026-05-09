@@ -39,7 +39,10 @@ function MetaCell({ label, value }: { label: string; value: string }) {
 function FeaturedTool({ tool }: { tool: Tool }) {
     const Icon = tool.icon;
     return (
-        <article className="overflow-hidden rounded-md border border-border-strong bg-bg-alt">
+        <article
+            id={`tool-${tool.slug}`}
+            className="scroll-mt-20 overflow-hidden rounded-md border border-border-strong bg-bg-alt"
+        >
             <div className="flex items-start gap-4 border-b border-border bg-bg px-5 py-5 sm:px-6">
                 <span
                     className="grid h-12 w-12 shrink-0 place-items-center rounded-md border border-border bg-bg-alt text-fg"
@@ -97,7 +100,10 @@ function CatalogRow({ tool }: { tool: Tool }) {
     const Icon = tool.icon;
     const showEta = tool.eta && (tool.status === "soon" || tool.status === "wip");
     return (
-        <li className="border-b border-border last:border-b-0">
+        <li
+            id={`tool-${tool.slug}`}
+            className="scroll-mt-20 border-b border-border last:border-b-0"
+        >
             <Link
                 href={tool.href}
                 className="group flex items-start gap-4 px-4 py-4 transition-colors hover:bg-bg-alt sm:px-6"

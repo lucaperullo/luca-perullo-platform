@@ -334,6 +334,86 @@ body {
   stroke-opacity: 0.85;
 }
 
+/* ─── Pixel-Gray variant (chanhdai-aligned editorial register) ─
+   The fly's silhouette has to read clearly on EITHER bg colour:
+   solid `var(--fg)` body (dark on light, light on dark), wings in
+   the same family (so wings don't drown the body), thick block-print
+   outlines, no coloured halo. A real SVG `feMorphology` filter
+   chunks the silhouette so edges visibly read as pixel-art blocks
+   rather than vector hairlines.                                    */
+
+/* Drop shadow — neutral, dark on light/light on dark via --fg-soft. */
+.fly[data-variant="pixel-gray"] {
+  filter: drop-shadow(0 1px 0 var(--fg-soft));
+}
+
+/* Pixelation filter applied on the SVG itself.
+   `feMorphology operator="dilate" radius="0.4"` rounds the corners
+   into chunky blobs; `feComponentTransfer` with discrete `tableValues`
+   quantises alpha to 3 steps (0, 0.55, 1) so partial-coverage edges
+   snap to either fully transparent or fully opaque — the visual that
+   makes vector shapes read as pixel-art tiles. */
+.fly[data-variant="pixel-gray"] svg {
+  shape-rendering: crispEdges;
+  filter: url(#fly-pixel-quantize);
+}
+
+/* Inline-defined SVG filter — referenced by every pixel-gray fly.
+   Mounted once via the layout (see Fly component). */
+
+/* Body — solid foreground, full opacity. NO outline (the morphology
+   filter creates the chunky edge). */
+.fly[data-variant="pixel-gray"] .fly-body {
+  fill: var(--fg);
+}
+.fly[data-variant="pixel-gray"] .fly-body-shimmer {
+  fill: transparent;
+}
+
+/* Eyes — midtone foreground (not bg!), so the head doesn't read as
+   a white blob in light mode. The eyes themselves are large (radius
+   2.5–2.7 SVG units) and span most of the head, so a fg-muted disc
+   with a tiny bg catchlight reads as eyes-on-head, not head-replaced.
+   Stroke gives a crisp pixel-tile silhouette around each eye. */
+.fly[data-variant="pixel-gray"] .fly-eye {
+  fill: var(--fg-muted);
+  stroke: var(--fg);
+  stroke-width: 0.5;
+  stroke-opacity: 1;
+}
+.fly[data-variant="pixel-gray"] .fly-eye-glint {
+  fill: var(--bg);
+  opacity: 1;
+}
+
+/* Wings — use a midtone foreground (--fg-muted) so they're visible
+   on both light AND dark backgrounds. Filled, not transparent —
+   we want a clear "wing pad" silhouette, not a translucent membrane.
+   Stroke uses --fg for a chunky block-print outline. */
+.fly[data-variant="pixel-gray"] .fly-wing-haze {
+  fill: transparent;
+}
+.fly[data-variant="pixel-gray"] .fly-wing-r,
+.fly[data-variant="pixel-gray"] .fly-wing-l {
+  fill: var(--fg-muted);
+  fill-opacity: 0.55;
+  stroke: var(--fg);
+  stroke-width: 0.7;
+  stroke-opacity: 1;
+  stroke-linejoin: miter;     /* sharp corners over rounded */
+}
+
+/* Veins — hide everything except the leading edge (costa).
+   Costa gets the same fg stroke as wing outline for visual cohesion. */
+.fly[data-variant="pixel-gray"] .fly-wing-veins path:not(.fly-vein-costa) {
+  stroke-opacity: 0;
+}
+.fly[data-variant="pixel-gray"] .fly-wing-veins .fly-vein-costa {
+  stroke: var(--fg);
+  stroke-opacity: 1;
+  stroke-width: 0.5;
+}
+
 /* Body sway — perpendicular sway tracks tripod alternation, plus a
    smaller forward-axis pitch from each push-off. Two stacked keyframes
    on different elements (svg + .fly-wings) so they don't overwrite. */

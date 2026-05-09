@@ -15,8 +15,11 @@ import { projects } from "@/data/projects";
 import { tools } from "@/data/tools";
 import { stack } from "@/data/stack";
 import { showcase } from "@/data/showcase";
+import { FAMILIES, formatEur, services } from "@/data/services";
+import { playCourse, totalLessons } from "@/data/play-courses";
 import { getPublishedNotes } from "@/lib/notes";
 import { cn, formatItalianDate } from "@/lib/utils";
+import { GraduationCap, Code2 } from "lucide-react";
 
 export const revalidate = 3600;
 
@@ -191,7 +194,147 @@ export default async function HomePage() {
 
             <SectionRule />
 
-            <Section anchor="stack" index={4} title="Stack">
+            <Section anchor="play" index={4} title="Corso interattivo">
+                <p className="mb-2 text-[14px] text-fg-muted">
+                    Impari programmando, non guardando. Il mio avatar
+                    digitale ti guida lezione per lezione, tu scrivi codice,
+                    vedi il sito apparire.
+                </p>
+                <p className="mb-5 text-[13px] text-fg-soft">
+                    {totalLessons} micro-lezioni · ~30 minuti · gratis · niente registrazione
+                </p>
+
+                <Link
+                    href="/play"
+                    className="group -mx-4 block sm:-mx-6"
+                    data-spider-anchor="square"
+                >
+                    <div className="flex flex-col gap-3 border border-fg bg-fg p-5 text-bg transition-colors hover:bg-fg/95 sm:p-6">
+                        <div className="flex items-start justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-md border border-bg/30 bg-bg/10 text-bg">
+                                    <GraduationCap className="h-5 w-5" aria-hidden />
+                                </span>
+                                <div>
+                                    <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-bg/60">
+                                        Live · gratuito
+                                    </p>
+                                    <p className="text-[16px] font-medium text-bg">
+                                        {playCourse.title}
+                                    </p>
+                                </div>
+                            </div>
+                            <ArrowUpRight
+                                className="h-5 w-5 shrink-0 text-bg/70 transition-colors group-hover:text-bg"
+                                aria-hidden
+                            />
+                        </div>
+                        <p className="text-[13.5px] leading-[1.55] text-bg/85">
+                            {playCourse.subtitle}
+                        </p>
+                        <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 font-mono text-[10.5px] uppercase tracking-[0.08em] text-bg/60">
+                            <span className="inline-flex items-center gap-1">
+                                <Code2 className="h-3 w-3" aria-hidden />
+                                4 moduli
+                            </span>
+                            <span>·</span>
+                            <span>{totalLessons} lezioni</span>
+                            <span>·</span>
+                            <span>Audio + editor + preview live</span>
+                            <span>·</span>
+                            <span>Sito reale alla fine</span>
+                        </div>
+                    </div>
+                </Link>
+            </Section>
+
+            <SectionRule />
+
+            <Section anchor="servizi" index={5} title="Servizi">
+                <p className="mb-2 text-[14px] text-fg-muted">
+                    Pacchetti pronti, prezzi dichiarati, consegna in giorni — non in mesi.
+                    Niente preventivi infiniti.
+                </p>
+                <p className="mb-5 text-[13px] text-fg-soft">
+                    Siti web, AI/Claude bot, automazioni, consulenze. Tutto a prezzo fisso.
+                </p>
+
+                {/* Card per famiglia di servizi — link al dettaglio nella pagina /servizi */}
+                <ul className="-mx-4 grid grid-cols-1 gap-px bg-border sm:-mx-6 sm:grid-cols-2">
+                    {(["siti", "ai", "automazioni", "consulenze"] as const).map((fam) => {
+                        const meta = FAMILIES[fam];
+                        const list = services.filter((s) => s.family === fam);
+                        const cheapestPaid = list
+                            .filter((s) => s.priceEur > 0)
+                            .reduce<number | null>(
+                                (lo, s) => (lo === null || s.priceEur < lo ? s.priceEur : lo),
+                                null,
+                            );
+                        const FamIcon = meta.icon;
+                        return (
+                            <li
+                                key={fam}
+                                data-spider-anchor="square"
+                                className="bg-bg"
+                            >
+                                <Link
+                                    href={`/servizi#${fam}`}
+                                    className="group flex h-full flex-col gap-3 px-4 py-5 transition-colors hover:bg-bg-alt sm:px-6"
+                                >
+                                    <div className="flex items-start gap-3">
+                                        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-md border border-border bg-bg-alt text-fg">
+                                            <FamIcon className="h-4 w-4" aria-hidden />
+                                        </span>
+                                        <div className="flex flex-col gap-0.5">
+                                            <span className="text-[14.5px] font-medium text-fg">
+                                                {meta.label}
+                                            </span>
+                                            <span className="font-mono text-[10.5px] uppercase tracking-[0.1em] text-fg-soft">
+                                                {meta.kicker}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <p className="text-[13px] leading-[1.55] text-fg-muted">
+                                        {meta.description}
+                                    </p>
+                                    <div className="mt-auto flex items-center justify-between gap-2 pt-1">
+                                        <span className="font-mono text-[11.5px] text-fg-muted">
+                                            {cheapestPaid !== null
+                                                ? `da ${formatEur(cheapestPaid)}`
+                                                : "Slot prenotabili"}
+                                        </span>
+                                        <ArrowUpRight
+                                            className="h-4 w-4 text-fg-soft transition-colors group-hover:text-fg"
+                                            aria-hidden
+                                        />
+                                    </div>
+                                </Link>
+                            </li>
+                        );
+                    })}
+                </ul>
+
+                <div className="mt-5 flex flex-wrap items-center gap-3">
+                    <Link
+                        href="/servizi"
+                        className="press inline-flex items-center gap-2 rounded-md border border-fg bg-fg px-3.5 py-2 font-mono text-[11.5px] uppercase tracking-[0.08em] text-bg hover:bg-fg/90"
+                    >
+                        Vedi tutti i pacchetti
+                        <ArrowUpRight className="h-3.5 w-3.5" aria-hidden />
+                    </Link>
+                    <Link
+                        href="/servizi/call-strategia-15"
+                        className="press inline-flex items-center gap-2 rounded-md border border-border-strong bg-bg px-3.5 py-2 font-mono text-[11.5px] uppercase tracking-[0.08em] text-fg hover:bg-bg-alt"
+                    >
+                        <Sparkles className="h-3.5 w-3.5" aria-hidden />
+                        Call gratuita 15 min
+                    </Link>
+                </div>
+            </Section>
+
+            <SectionRule />
+
+            <Section anchor="stack" index={6} title="Stack">
                 <p className="mb-4 text-[13.5px] text-fg-muted">
                     Le tecnologie con cui lavoro ogni giorno. Quando un progetto chiede altro, lo
                     imparo: non sono fedele agli stack, sono fedele a quello che funziona.
@@ -219,7 +362,7 @@ export default async function HomePage() {
 
             <SectionRule />
 
-            <Section anchor="showcase" index={5} title="Showcase">
+            <Section anchor="showcase" index={7} title="Showcase">
                 <p className="mb-4 text-[14px] text-fg-muted">
                     Studi visivi — non sono prodotti reali, sono dimostrazioni del livello di
                     cura che porto nei progetti. Tipografia, 3D, dati, mobile, brand, motion.
@@ -290,7 +433,7 @@ export default async function HomePage() {
 
             <SectionRule />
 
-            <Section anchor="projects" index={6} title="Projects">
+            <Section anchor="projects" index={8} title="Projects">
                 <ul className="-mx-4 sm:-mx-6">
                     {projects.map((p, i) => (
                         <li
@@ -342,7 +485,7 @@ export default async function HomePage() {
 
             <SectionRule />
 
-            <Section anchor="notes" index={7} title="Notes">
+            <Section anchor="notes" index={9} title="Notes">
                 <ul className="-mx-4 sm:-mx-6">
                     {notes.map((n, i) => (
                         <li

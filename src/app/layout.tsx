@@ -6,6 +6,7 @@ import { SmoothScroll } from "@/components/smooth-scroll";
 import { Fly } from "@/components/fly";
 import { CookieConsent } from "@/components/cookie-consent";
 import { SharedBust } from "@/components/shared-bust";
+import { SiteCommandPalette } from "@/components/site-command-palette";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -62,6 +63,44 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeBootstrap }} />
       </head>
       <body className="flex min-h-full flex-col bg-bg text-fg">
+        {/*
+          Document-level SVG filter defs. Referenced by CSS `filter: url(#…)`
+          in components that need shared filters (e.g. the pixel-gray fly
+          variant). Hidden via inline style so it never affects layout.
+          Mounted here so a single ID resolves uniquely across the page,
+          regardless of how many fly instances render.
+        */}
+        <svg
+          aria-hidden
+          width="0"
+          height="0"
+          style={{ position: "absolute", width: 0, height: 0, overflow: "hidden" }}
+        >
+          <defs>
+            {/*
+              Pixel-aliased filter — preserves the fly silhouette.
+
+              Earlier flood/tile sampling produced "true pixel art" but
+              dissolved the legs/wings/head into an unreadable blob.
+              This filter is more restrained: it just dilates strokes
+              by 0.5 user-space units (fattens hairlines into chunky
+              lines) and snaps alpha to binary (no anti-aliasing, all
+              edges become hard pixel-tile boundaries). Combined with
+              the per-element CSS overrides for pixel-gray, the fly
+              reads as "stylized chunky pixel-y" while staying
+              recognisable as a fly.
+
+              For TRUE 16-bit pixel-art (rectangular sprite redraw),
+              that's a separate component, not a filter.
+            */}
+            <filter id="fly-pixel-quantize" x="-10%" y="-10%" width="120%" height="120%">
+              <feMorphology operator="dilate" radius="0.5" in="SourceGraphic" result="thick" />
+              <feComponentTransfer in="thick">
+                <feFuncA type="discrete" tableValues="0 1" />
+              </feComponentTransfer>
+            </filter>
+          </defs>
+        </svg>
         <SmoothScroll />
         <SiteHeader />
         <main className="flex-1">{children}</main>
@@ -69,6 +108,7 @@ export default function RootLayout({
         <Fly />
         <CookieConsent />
         <SharedBust />
+        <SiteCommandPalette />
       </body>
     </html>
   );

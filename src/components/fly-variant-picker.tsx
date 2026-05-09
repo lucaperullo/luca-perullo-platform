@@ -40,6 +40,12 @@ const VARIANTS: ReadonlyArray<{
         sub: "Drosophila melanogaster",
         note: "Ambrata, occhi arancio-rosso",
     },
+    {
+        v: "pixel-gray",
+        label: "Pixel gray",
+        sub: "Editoriale · chanhdai",
+        note: "Grigio scala, edges crispi, niente halo",
+    },
 ];
 
 /**
@@ -49,7 +55,7 @@ const VARIANTS: ReadonlyArray<{
  * component — uses `setActiveFlyVariant` for the global broadcast.
  */
 export function FlyVariantPicker() {
-    const [active, setActive] = useState<FlyVariant>("blue-bottle");
+    const [active, setActive] = useState<FlyVariant>("pixel-gray");
 
     useEffect(() => {
         const stored = getActiveFlyVariant();

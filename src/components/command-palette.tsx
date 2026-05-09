@@ -70,6 +70,20 @@ export function CommandPalette({
         return () => window.removeEventListener("keydown", onKey);
     }, [triggerKey]);
 
+    // External open trigger — lets a button anywhere in the layout
+    // (e.g. the site-header search icon) open this palette without
+    // needing to share state. Header dispatches `new Event("cmdk:open")`.
+    useEffect(() => {
+        const onOpen = () => setOpen(true);
+        const onClose = () => setOpen(false);
+        window.addEventListener("cmdk:open", onOpen);
+        window.addEventListener("cmdk:close", onClose);
+        return () => {
+            window.removeEventListener("cmdk:open", onOpen);
+            window.removeEventListener("cmdk:close", onClose);
+        };
+    }, []);
+
     useEffect(() => {
         if (open) {
             setQ("");

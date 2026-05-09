@@ -11,12 +11,17 @@ import { prefersReducedMotion } from "./use-reduced-motion";
  *   • blue-bottle   — Calliphora vomitoria, iridescent metallic blue
  *   • green-bottle  — Lucilia sericata, iridescent emerald
  *   • fruit-fly     — Drosophila melanogaster, amber-yellow body
+ *   • pixel-gray    — chanhdai-aligned editorial: 4-shade grayscale,
+ *                     crisp-edge rendering, no iridescence, hairline-
+ *                     outlined wings. Preserves all gait + grooming
+ *                     animations, just swaps the visual register.
  */
 export type FlyVariant =
     | "housefly"
     | "blue-bottle"
     | "green-bottle"
-    | "fruit-fly";
+    | "fruit-fly"
+    | "pixel-gray";
 
 const FLY_VARIANT_STORAGE_KEY = "lp-fly-variant";
 const FLY_VARIANT_EVENT = "lp:fly-variant";
@@ -26,6 +31,7 @@ const VALID_VARIANTS: ReadonlySet<FlyVariant> = new Set([
     "blue-bottle",
     "green-bottle",
     "fruit-fly",
+    "pixel-gray",
 ]);
 
 /**
@@ -208,7 +214,7 @@ function gaitLift(phase: number): number {
 }
 
 export function Fly({
-    variant: variantProp = "blue-bottle",
+    variant: variantProp = "pixel-gray",
     bounds,
 }: {
     variant?: FlyVariant;
@@ -656,7 +662,7 @@ export function Fly({
  *   each leg drawn as a 3-point path (body→knee→tarsus). Always visible.
  */
 function FlyShape({
-    variant = "blue-bottle",
+    variant = "pixel-gray",
     legPathRefs,
     wingFlapRefs,
 }: {
@@ -685,25 +691,33 @@ function FlyShape({
         wingGradLDark: `${uid}-wing-grad-l-dark`,
     } as const;
 
-    // Body fill per variant.
+    // Body fill per variant. pixel-gray reuses housefly's gradient as
+    // the underlying attribute value — CSS in globals.css overrides it
+    // via `.fly[data-variant="pixel-gray"] .fly-body` (presentation
+    // attributes have lower specificity than CSS rules) so the visible
+    // fill ends up flat grayscale-foreground without touching JS shape.
     const bodyFill: string = {
         housefly:       `url(#${G.bodyHousefly})`,
         "blue-bottle":  `url(#${G.bodyBlue})`,
         "green-bottle": `url(#${G.bodyEmerald})`,
         "fruit-fly":    `url(#${G.bodyAmber})`,
+        "pixel-gray":   `url(#${G.bodyHousefly})`,
     }[variant];
 
     // Eye colour. Each species gets its own gradient — Musca's eyes
     // are deep red-mahogany (NOT pitch black) when seen up close.
+    // pixel-gray's CSS override turns these into bg-alt cutouts.
     const eyeFill: string = {
         housefly:       `url(#${G.eyeHousefly})`,
         "blue-bottle":  `url(#${G.eye})`,
         "green-bottle": `url(#${G.eye})`,
         "fruit-fly":    `url(#${G.eyeAmber})`,
+        "pixel-gray":   `url(#${G.eyeHousefly})`,
     }[variant];
 
     // Shimmer overlay — every species has a subtle highlight catch on
     // the thorax. Only the colour temperature differs by species.
+    // pixel-gray hides it via CSS (chan style: no metallic catches).
     const shimmerFill: string =
         variant === "blue-bottle"
             ? `url(#${G.shimmerGold})`
@@ -711,7 +725,9 @@ function FlyShape({
                 ? `url(#${G.shimmerLime})`
                 : variant === "housefly"
                     ? `url(#${G.shimmerDun})`
-                    : `url(#${G.shimmerGold})`;
+                    : variant === "pixel-gray"
+                        ? `url(#${G.shimmerDun})`
+                        : `url(#${G.shimmerGold})`;
 
     return (
         <svg
@@ -1104,11 +1120,11 @@ function FlyShape({
                 gets solid dark crimson; metallic + fruit-fly variants
                 use a radial gradient with a bright catchlight near
                 the front. */}
-            <ellipse cx="9" cy="-2.2" rx="2.5" ry="2.7" fill={eyeFill} />
-            <ellipse cx="9" cy="2.2"  rx="2.5" ry="2.7" fill={eyeFill} />
-            <ellipse cx="10.0" cy="-2.9" rx="0.45" ry="0.35"
+            <ellipse className="fly-eye" cx="9" cy="-2.2" rx="2.5" ry="2.7" fill={eyeFill} />
+            <ellipse className="fly-eye" cx="9" cy="2.2"  rx="2.5" ry="2.7" fill={eyeFill} />
+            <ellipse className="fly-eye-glint" cx="10.0" cy="-2.9" rx="0.45" ry="0.35"
                 fill="#fef2f2" opacity="0.85" />
-            <ellipse cx="10.0" cy="1.5" rx="0.45" ry="0.35"
+            <ellipse className="fly-eye-glint" cx="10.0" cy="1.5" rx="0.45" ry="0.35"
                 fill="#fef2f2" opacity="0.85" />
 
             {/* ─── ANTENNAE ─── */}
@@ -1143,7 +1159,7 @@ function pickRandom<T>(items: readonly T[]): T {
  *   • size      — pixel scale (the artwork's natural size is FLY_W × FLY_H)
  */
 export function FlyArtwork({
-    variant = "blue-bottle",
+    variant = "pixel-gray",
     heading = 0,
     size = 64,
     className,
