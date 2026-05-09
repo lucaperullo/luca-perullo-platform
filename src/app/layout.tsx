@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SmoothScroll } from "@/components/smooth-scroll";
 import { Fly } from "@/components/fly";
 import { CookieConsent } from "@/components/cookie-consent";
+import { InAppBrowserBanner } from "@/components/inapp-browser-banner";
 import { SharedBust } from "@/components/shared-bust";
 import { SiteCommandPalette } from "@/components/site-command-palette";
 import "./globals.css";
@@ -107,6 +108,7 @@ export default function RootLayout({
         <SiteFooter />
         <Fly />
         <CookieConsent />
+        <InAppBrowserBanner />
         <SharedBust />
         <SiteCommandPalette />
       </body>
