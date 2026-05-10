@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { ChromeGate } from "@/components/chrome-gate";
 import { SmoothScroll } from "@/components/smooth-scroll";
 import { Fly } from "@/components/fly";
 import { CookieConsent } from "@/components/cookie-consent";
@@ -116,9 +117,13 @@ export default function RootLayout({
           </defs>
         </svg>
         <SmoothScroll />
-        <SiteHeader />
+        <ChromeGate>
+          <SiteHeader />
+        </ChromeGate>
         <main className="flex-1">{children}</main>
-        <SiteFooter />
+        <ChromeGate>
+          <SiteFooter />
+        </ChromeGate>
         <Fly />
         <CookieConsent />
         <InAppBrowserBanner />
