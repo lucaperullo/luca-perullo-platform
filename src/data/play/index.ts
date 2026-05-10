@@ -11,7 +11,8 @@
  * I corsi "soon" hanno solo metadati ricchi: titolo, descrizione,
  * subjects, level. Saranno sbloccati uno alla volta nei prossimi turn.
  */
-import type { Lesson, Module, PlayCourse, PlaySubject } from "./types";
+import type { Lesson, Module, PlayArea, PlayCourse, PlaySubject } from "./types";
+import { AREA_SUBJECTS } from "./types";
 import { playCourse as primoSitoCourse } from "@/data/play-courses";
 import { accessibilitaWcagCourse } from "./courses/accessibilita-wcag";
 import { animazioniAvanzateCourse } from "./courses/animazioni-avanzate";
@@ -599,6 +600,18 @@ export function lessonsByModule(
 /** Filtra corsi per materia. Un corso può apparire in più materie. */
 export function getCoursesBySubject(subject: PlaySubject): PlayCourse[] {
     return playCourses.filter((c) => c.subjects.includes(subject));
+}
+
+/**
+ * Filtra corsi per area macro. Un corso appare in un'area se almeno
+ * uno dei suoi `subjects` appartiene all'area. I corsi multi-materia
+ * (es. "RAG" è ai-tools+backend) appaiono in entrambe le aree.
+ */
+export function getCoursesByArea(area: PlayArea): PlayCourse[] {
+    const areaSubjects = new Set<PlaySubject>(AREA_SUBJECTS[area]);
+    return playCourses.filter((c) =>
+        c.subjects.some((s) => areaSubjects.has(s)),
+    );
 }
 
 /** Tutte le materie con almeno un corso (live o soon). */

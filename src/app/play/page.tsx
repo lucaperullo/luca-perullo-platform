@@ -10,18 +10,16 @@ import { SectionLabel } from "@/components/section-label";
 import { SectionRule } from "@/components/section-rule";
 import { SideLines } from "@/components/side-lines";
 import {
-    getAllSubjects,
-    getCoursesBySubject,
     liveCourses,
     playCourses,
     upcomingCourses,
 } from "@/data/play";
 import {
-    SUBJECT_META,
+    type PlayArea,
     type PlayCourse,
     type PlayCourseLevel,
-    type PlaySubject,
 } from "@/data/play/types";
+import { AreaCard } from "@/components/play/area-card";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -31,15 +29,13 @@ export const metadata: Metadata = {
     alternates: { canonical: "/play" },
 };
 
-const SUBJECT_ORDER: PlaySubject[] = [
-    "html",
-    "css",
-    "javascript",
-    "react",
-    "backend",
-    "fullstack",
-    "ai-tools",
-];
+/**
+ * Ordine di visualizzazione delle 4 macro-aree sulla landing.
+ * Frontend per primo (più richiesto + entry-level), poi backend e
+ * full-stack che danno completezza, AI in fondo perché è la materia
+ * più diversa (richiede meno prerequisiti web).
+ */
+const AREA_ORDER: PlayArea[] = ["frontend", "backend", "fullstack", "ai"];
 
 const LEVELS: PlayCourseLevel[] = ["base", "intermedio", "avanzato", "pro"];
 
@@ -74,9 +70,6 @@ export default function PlayCatalogPage() {
         (sum, c) => sum + c.lessons.length,
         0,
     );
-    const subjects = SUBJECT_ORDER.filter((s) =>
-        getAllSubjects().includes(s),
-    );
     const featured = liveCourses;
     const firstCourseSlug = featured[0]?.slug ?? "primo-sito";
 
@@ -108,10 +101,12 @@ export default function PlayCatalogPage() {
                         </span>
                     </h1>
                     <p className="mt-5 max-w-[60ch] text-[15.5px] leading-[1.7] text-fg-muted">
-                        {playCourses.length} corsi in {subjects.length}{" "}
-                        materie, dalle prime righe di HTML agli agenti AI con
-                        MCP. Avatar che ti spiega, codice che scrivi, sito che
-                        cresce. Niente video passivi, niente carta di credito.
+                        {playCourses.length} corsi in 4 aree —
+                        Frontend, Backend, Full-stack, AI &
+                        Automazioni — dalle prime righe di HTML agli
+                        agenti AI con MCP. Avatar che ti spiega, codice
+                        che scrivi, sito che cresce. Niente video
+                        passivi, niente carta di credito.
                     </p>
                     <div className="mt-7 flex flex-wrap items-center gap-3">
                         <Link
@@ -122,17 +117,17 @@ export default function PlayCatalogPage() {
                             <ArrowRight className="h-3.5 w-3.5" aria-hidden />
                         </Link>
                         <Link
-                            href="#materie"
+                            href="#aree"
                             className="press inline-flex items-center gap-2 rounded-md border border-border bg-bg-alt px-5 py-3 font-mono text-[12px] uppercase tracking-[0.08em] text-fg transition-colors hover:border-border-strong"
                         >
-                            Esplora le 7 materie
+                            Esplora le 4 aree
                         </Link>
                     </div>
 
                     {/* Stats */}
                     <dl className="mt-10 grid grid-cols-2 gap-x-6 gap-y-5 border-t border-border pt-8 sm:grid-cols-4 sm:gap-x-8">
                         <Stat n={playCourses.length} label="corsi totali" />
-                        <Stat n={subjects.length} label="materie" />
+                        <Stat n={AREA_ORDER.length} label="aree" />
                         <Stat n={LEVELS.length} label="livelli" />
                         <Stat
                             n={liveCourses.length}
@@ -163,20 +158,22 @@ export default function PlayCatalogPage() {
 
                 <SectionRule />
 
-                {/* ─── MATERIE — 7 cards che linkano a /materia/[s] ─── */}
+                {/* ─── AREE — 4 macro cards disegnate ad-hoc ─────────── */}
                 <section
-                    id="materie"
+                    id="aree"
                     className="py-12 scroll-mt-20 sm:py-16"
                 >
-                    <SectionLabel index={2}>Le 7 materie</SectionLabel>
+                    <SectionLabel index={2}>Le 4 aree</SectionLabel>
                     <p className="mt-3 max-w-[60ch] text-[15px] leading-[1.7] text-fg-muted">
-                        Ogni materia copre più livelli, dal base al pro.
-                        Scegli quello che parte da dove sei già tu.
+                        Quattro mondi, ognuno con corsi dal base al pro.
+                        Frontend è la porta più frequentata, AI è quella
+                        che cambia più velocemente. Scegli quella che ti
+                        chiama.
                     </p>
-                    <ul className="mt-7 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                        {subjects.map((s) => (
-                            <li key={s}>
-                                <SubjectCard subject={s} />
+                    <ul className="mt-7 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        {AREA_ORDER.map((a) => (
+                            <li key={a}>
+                                <AreaCard area={a} />
                             </li>
                         ))}
                     </ul>
@@ -319,40 +316,6 @@ function FeaturedCard({
                 </span>
                 <ArrowRight
                     className="h-4 w-4 text-fg-soft transition-transform group-hover:translate-x-1"
-                    aria-hidden
-                />
-            </div>
-        </Link>
-    );
-}
-
-function SubjectCard({ subject }: { subject: PlaySubject }) {
-    const meta = SUBJECT_META[subject];
-    const courses = getCoursesBySubject(subject);
-    const liveCount = courses.filter((c) => c.status === "live").length;
-    return (
-        <Link
-            href={`/play/materia/${subject}`}
-            className="group flex h-full flex-col rounded-md border border-border bg-bg-alt p-5 transition-colors hover:border-border-strong hover:bg-bg"
-        >
-            <div className="flex items-baseline gap-3">
-                <span aria-hidden className="text-[26px] leading-none">
-                    {meta.emoji}
-                </span>
-                <span className="text-[17px] font-semibold tracking-tight text-fg">
-                    {meta.label}
-                </span>
-            </div>
-            <p className="mt-3 text-[13.5px] leading-[1.55] text-fg-muted">
-                {meta.description}
-            </p>
-            <div className="mt-auto flex items-center justify-between pt-5">
-                <span className="font-mono text-[10.5px] uppercase tracking-[0.1em] text-fg-soft">
-                    {courses.length} corsi
-                    {liveCount > 0 ? ` · ${liveCount} live` : ""}
-                </span>
-                <ArrowRight
-                    className="h-3.5 w-3.5 text-fg-soft transition-transform group-hover:translate-x-0.5"
                     aria-hidden
                 />
             </div>
