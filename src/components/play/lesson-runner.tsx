@@ -86,7 +86,50 @@ export function LessonRunner({
 
     const previewRef = useRef<LivePreviewHandle>(null);
     const ttsHandleRef = useRef<TTSHandle | null>(null);
+    /**
+     * Generation counter per stoppare audio "in volo": ogni nuova
+     * chiamata a `playOne` incrementa il contatore e, quando l'await
+     * di `playTts` ritorna, controlla che la sua generation sia ancora
+     * la più recente — altrimenti stoppa l'handle appena creato senza
+     * suonarlo. Evita sovrapposizioni quando l'utente clicca Verifica
+     * mentre la narrazione principale sta ancora caricando.
+     */
+    const ttsGenRef = useRef(0);
     const codeBeforeLessonRef = useRef<string | null>(null);
+
+    /**
+     * Helper unico per riprodurre TTS. Stoppa SEMPRE l'audio precedente
+     * prima di partire, e gestisce la race con generation counter.
+     * Usato da:
+     *   - mount effect (narrazione principale)
+     *   - handlePlayScript (riascolta)
+     *   - handleVerify (success/encourage dopo verifica)
+     */
+    const playOne = async (
+        audioPath: string,
+        script: string,
+        callbacks: { onStart?: () => void; onEnd?: () => void } = {},
+    ) => {
+        ttsHandleRef.current?.stop();
+        ttsHandleRef.current = null;
+        const myGen = ++ttsGenRef.current;
+
+        const handle = await playTts({
+            audioPath,
+            script,
+            onStart: callbacks.onStart,
+            onEnd: callbacks.onEnd,
+        });
+
+        // Se nel frattempo una NUOVA chiamata è partita, abbandoniamo:
+        // questa è "stale". stop() la chiude prima che parta.
+        if (myGen !== ttsGenRef.current) {
+            handle.stop();
+            return;
+        }
+        ttsHandleRef.current = handle;
+        handle.play();
+    };
 
     // Access guard via useSyncExternalStore: server-side "checking",
     // client-side legge localStorage.
@@ -137,26 +180,26 @@ export function LessonRunner({
     useEffect(() => {
         if (accessGuard !== "ok" || isMuted) return;
         let cancelled = false;
-        (async () => {
-            const handle = await playTts({
-                audioPath:
-                    lesson.audioPath ??
-                    getLessonAudioUrl(courseSlug, lesson.order),
-                script: lesson.script,
+        void playOne(
+            lesson.audioPath ?? getLessonAudioUrl(courseSlug, lesson.order),
+            lesson.script,
+            {
                 onStart: () => {
                     if (!cancelled) setIsSpeaking(true);
                 },
                 onEnd: () => {
                     if (!cancelled) setIsSpeaking(false);
                 },
-            });
-            ttsHandleRef.current = handle;
-            handle.play();
-        })();
+            },
+        );
         return () => {
             cancelled = true;
             ttsHandleRef.current?.stop();
             ttsHandleRef.current = null;
+            // Bumpiamo il gen counter così se c'è ancora una playTts
+            // in volo (preference="local" → generateLocalAudio async)
+            // viene scartata al ritorno dell'await.
+            ttsGenRef.current++;
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [lesson.order, accessGuard]);
@@ -182,13 +225,17 @@ export function LessonRunner({
                 // bottone Prossima nel footer).
                 setMobileTab("lesson");
                 if (!isMuted) {
-                    void playFeedback(
+                    void playOne(
                         getLessonFeedbackUrl(
                             courseSlug,
                             lesson.order,
                             "success",
                         ),
                         lesson.successScript,
+                        {
+                            onStart: () => setIsSpeaking(true),
+                            onEnd: () => setIsSpeaking(false),
+                        },
                     );
                 }
             } else {
@@ -198,13 +245,17 @@ export function LessonRunner({
                 // sta nel pannello Lezione, portalo lì.
                 setMobileTab("lesson");
                 if (!isMuted) {
-                    void playFeedback(
+                    void playOne(
                         getLessonFeedbackUrl(
                             courseSlug,
                             lesson.order,
                             "encourage",
                         ),
                         lesson.encourageScript,
+                        {
+                            onStart: () => setIsSpeaking(true),
+                            onEnd: () => setIsSpeaking(false),
+                        },
                     );
                 }
             }
@@ -243,18 +294,14 @@ export function LessonRunner({
     };
 
     const handlePlayScript = () => {
-        ttsHandleRef.current?.stop();
-        playTts({
-            audioPath:
-                lesson.audioPath ??
-                getLessonAudioUrl(courseSlug, lesson.order),
-            script: lesson.script,
-            onStart: () => setIsSpeaking(true),
-            onEnd: () => setIsSpeaking(false),
-        }).then((h) => {
-            ttsHandleRef.current = h;
-            h.play();
-        });
+        void playOne(
+            lesson.audioPath ?? getLessonAudioUrl(courseSlug, lesson.order),
+            lesson.script,
+            {
+                onStart: () => setIsSpeaking(true),
+                onEnd: () => setIsSpeaking(false),
+            },
+        );
     };
 
     if (accessGuard === "checking") {
@@ -726,24 +773,3 @@ const progressSubscribe = (cb: () => void) => {
     };
 };
 
-/**
- * Riproduce uno script di feedback (success o encourage) usando
- * il TTS player principale → cerca prima l'MP3 pre-renderizzato
- * con la voce di Luca, fallback gestito da preference utente
- * (mai più speechSynthesis fortuito qui).
- *
- * Nota: questa funzione vive fuori dal componente perché richiede
- * di avere accesso a setIsSpeaking via closure dalla call site.
- * In realtà il setIsSpeaking lo passiamo tramite onStart/onEnd.
- */
-async function playFeedback(audioPath: string, script: string): Promise<void> {
-    const handle = await playTts({
-        audioPath,
-        script,
-        // onStart/onEnd: il lesson runner scope già aggiorna isSpeaking
-        // tramite il TTS principale del mount. Per i feedback è ok
-        // lasciarli no-op — l'audio parte e finisce, l'avatar mood
-        // è già stato cambiato dal chiamante.
-    });
-    handle.play();
-}
