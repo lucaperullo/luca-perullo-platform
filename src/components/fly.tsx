@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 import { findEnclosingWeb } from "@/lib/insect-registry";
 import { prefersReducedMotion } from "./use-reduced-motion";
@@ -250,12 +251,25 @@ export function Fly({
     });
     const [mounted, setMounted] = useState(false);
 
+    /**
+     * Sulle route `/play` la mosca non monta. Sui pannelli lezione
+     * (full-viewport editor + preview) la sua silhouette scura nell'angolo
+     * della navbar veniva letta come un bottone, e il movimento competeva
+     * con il codice e l'avatar del docente. Sul resto del sito resta.
+     */
+    const pathname = usePathname();
+    const isPlayRoute = pathname?.startsWith("/play") ?? false;
+
     useEffect(() => {
+        if (isPlayRoute) {
+            setMounted(false);
+            return;
+        }
         if (typeof window === "undefined") return;
         const isCoarse = window.matchMedia("(pointer: coarse)").matches;
         if (prefersReducedMotion() || isCoarse) return;
         setMounted(true);
-    }, []);
+    }, [isPlayRoute]);
 
     useEffect(() => {
         if (!mounted) return;
