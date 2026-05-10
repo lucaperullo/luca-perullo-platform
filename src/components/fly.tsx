@@ -252,16 +252,21 @@ export function Fly({
     const [mounted, setMounted] = useState(false);
 
     /**
-     * Sulle route `/play` la mosca non monta. Sui pannelli lezione
-     * (full-viewport editor + preview) la sua silhouette scura nell'angolo
-     * della navbar veniva letta come un bottone, e il movimento competeva
-     * con il codice e l'avatar del docente. Sul resto del sito resta.
+     * Sul lesson runner (/play/<corso>/<lezione>) la mosca non monta:
+     * la sua silhouette scura nell'angolo della navbar veniva letta
+     * come un bottone, e il movimento competeva con il codice e
+     * l'avatar del docente. Sul catalogo /play e sulle pagine corso
+     * /play/<corso> la mosca cammina come sul resto del sito.
      */
     const pathname = usePathname();
-    const isPlayRoute = pathname?.startsWith("/play") ?? false;
+    const isLessonRunner = (() => {
+        if (!pathname) return false;
+        const parts = pathname.split("/").filter(Boolean);
+        return parts[0] === "play" && parts.length >= 3;
+    })();
 
     useEffect(() => {
-        if (isPlayRoute) {
+        if (isLessonRunner) {
             setMounted(false);
             return;
         }
@@ -269,7 +274,7 @@ export function Fly({
         const isCoarse = window.matchMedia("(pointer: coarse)").matches;
         if (prefersReducedMotion() || isCoarse) return;
         setMounted(true);
-    }, [isPlayRoute]);
+    }, [isLessonRunner]);
 
     useEffect(() => {
         if (!mounted) return;
