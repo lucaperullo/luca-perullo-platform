@@ -9,6 +9,7 @@ import { ThemeToggle } from "./theme-toggle";
 import { HeaderAccount } from "./auth/header-account";
 
 const NAV = [
+    { href: "/play", label: "Corsi" },
     { href: "/tools", label: "Tools" },
     { href: "/components", label: "Components" },
     { href: "/blog", label: "Blog" },

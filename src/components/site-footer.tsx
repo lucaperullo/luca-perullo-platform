@@ -11,6 +11,7 @@ export function SiteFooter() {
                     </span>
                 </div>
                 <nav className="flex flex-wrap gap-x-5 gap-y-2 text-[12.5px] text-fg-muted">
+                    <Link href="/play" className="hover:text-fg">Corsi</Link>
                     <Link href="/tools" className="hover:text-fg">Tools</Link>
                     <Link href="/components" className="hover:text-fg">Components</Link>
                     <Link href="/blog" className="hover:text-fg">Blog</Link>

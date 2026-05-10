@@ -64,6 +64,7 @@ const SOCIAL_LINKS = [
 
 /** Personal manifest — short editorial tags about what I build & share. */
 const TICKER_ITEMS = [
+    "Corso gratuito · impari programmando · /play",
     "Web app · Next.js",
     "AI integration · OpenAI / Anthropic",
     "E-commerce custom · Stripe",
@@ -131,70 +132,7 @@ export default async function HomePage() {
 
             <SectionRule />
 
-            <Section anchor="connect" index={2} title="Connect">
-                <p className="mb-4 text-[14px] text-fg-muted">
-                    Scrivimi dove preferisci. Rispondo entro 24 ore nei giorni lavorativi.
-                </p>
-                <div className="-mx-4 grid grid-cols-1 bg-bg sm:-mx-6 sm:grid-cols-2 lg:grid-cols-3">
-                    {SOCIAL_LINKS.map((s, i) => (
-                        <div
-                            key={s.label}
-                            data-spider-anchor="square"
-                            className={cn(
-                                "row-rule sm:border-border sm:[&:nth-child(odd)]:border-r lg:[&:nth-child(2n)]:border-r lg:[&:nth-child(3n)]:border-r-0",
-                                i === 0 && "row-rule-top",
-                            )}
-                        >
-                            <SocialTile
-                                icon={s.icon}
-                                label={s.label}
-                                href={s.href}
-                                handle={s.handle}
-                            />
-                        </div>
-                    ))}
-                </div>
-            </Section>
-
-            <SectionRule />
-
-            <Section anchor="tools" index={3} title="Tools">
-                <p className="mb-5 text-[14px] text-fg-muted">
-                    Strumenti gratuiti che uso ogni giorno e ho reso pubblici. Niente account, niente paywall.
-                </p>
-                <ul className="-mx-4 sm:-mx-6">
-                    {tools.map((tool, i) => (
-                        <li
-                            key={tool.slug}
-                            className={cn("row-rule", i === 0 && "row-rule-top")}
-                        >
-                            <Link
-                                href={tool.href}
-                                className="group flex items-center gap-4 px-4 py-4 transition-colors hover:bg-bg-alt sm:px-6"
-                            >
-                                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-md border border-border bg-bg-alt text-fg">
-                                    <tool.icon className="h-4 w-4" aria-hidden />
-                                </span>
-                                <span className="flex flex-1 flex-col gap-0.5">
-                                    <span className="flex items-center gap-2 text-[14.5px] font-medium text-fg">
-                                        {tool.name}
-                                        <ToolStatus status={tool.status} />
-                                    </span>
-                                    <span className="text-[13px] text-fg-muted">{tool.summary}</span>
-                                </span>
-                                <ArrowUpRight
-                                    className="h-4 w-4 shrink-0 text-fg-soft transition-colors group-hover:text-fg"
-                                    aria-hidden
-                                />
-                            </Link>
-                        </li>
-                    ))}
-                </ul>
-            </Section>
-
-            <SectionRule />
-
-            <Section anchor="play" index={4} title="Corso interattivo">
+            <Section anchor="play" index={2} title="Corso interattivo">
                 <p className="mb-2 text-[14px] text-fg-muted">
                     Impari programmando, non guardando. Il mio avatar
                     digitale ti guida lezione per lezione, tu scrivi codice,
@@ -246,6 +184,69 @@ export default async function HomePage() {
                         </div>
                     </div>
                 </Link>
+            </Section>
+
+            <SectionRule />
+
+            <Section anchor="connect" index={3} title="Connect">
+                <p className="mb-4 text-[14px] text-fg-muted">
+                    Scrivimi dove preferisci. Rispondo entro 24 ore nei giorni lavorativi.
+                </p>
+                <div className="-mx-4 grid grid-cols-1 bg-bg sm:-mx-6 sm:grid-cols-2 lg:grid-cols-3">
+                    {SOCIAL_LINKS.map((s, i) => (
+                        <div
+                            key={s.label}
+                            data-spider-anchor="square"
+                            className={cn(
+                                "row-rule sm:border-border sm:[&:nth-child(odd)]:border-r lg:[&:nth-child(2n)]:border-r lg:[&:nth-child(3n)]:border-r-0",
+                                i === 0 && "row-rule-top",
+                            )}
+                        >
+                            <SocialTile
+                                icon={s.icon}
+                                label={s.label}
+                                href={s.href}
+                                handle={s.handle}
+                            />
+                        </div>
+                    ))}
+                </div>
+            </Section>
+
+            <SectionRule />
+
+            <Section anchor="tools" index={4} title="Tools">
+                <p className="mb-5 text-[14px] text-fg-muted">
+                    Strumenti gratuiti che uso ogni giorno e ho reso pubblici. Niente account, niente paywall.
+                </p>
+                <ul className="-mx-4 sm:-mx-6">
+                    {tools.map((tool, i) => (
+                        <li
+                            key={tool.slug}
+                            className={cn("row-rule", i === 0 && "row-rule-top")}
+                        >
+                            <Link
+                                href={tool.href}
+                                className="group flex items-center gap-4 px-4 py-4 transition-colors hover:bg-bg-alt sm:px-6"
+                            >
+                                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-md border border-border bg-bg-alt text-fg">
+                                    <tool.icon className="h-4 w-4" aria-hidden />
+                                </span>
+                                <span className="flex flex-1 flex-col gap-0.5">
+                                    <span className="flex items-center gap-2 text-[14.5px] font-medium text-fg">
+                                        {tool.name}
+                                        <ToolStatus status={tool.status} />
+                                    </span>
+                                    <span className="text-[13px] text-fg-muted">{tool.summary}</span>
+                                </span>
+                                <ArrowUpRight
+                                    className="h-4 w-4 shrink-0 text-fg-soft transition-colors group-hover:text-fg"
+                                    aria-hidden
+                                />
+                            </Link>
+                        </li>
+                    ))}
+                </ul>
             </Section>
 
             <SectionRule />
