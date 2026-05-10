@@ -38,6 +38,7 @@ import {
     syncFromCloud,
 } from "./progress-tracker";
 import { playTts, type TTSHandle } from "./tts-player";
+import { getLessonAudioUrl, getLessonFeedbackUrl } from "@/lib/play-audio-url";
 import { cn } from "@/lib/utils";
 
 export type LessonRunnerProps = {
@@ -138,7 +139,9 @@ export function LessonRunner({
         let cancelled = false;
         (async () => {
             const handle = await playTts({
-                audioPath: lesson.audioPath ?? `/play-audio/${courseSlug}/${lesson.order}.mp3`,
+                audioPath:
+                    lesson.audioPath ??
+                    getLessonAudioUrl(courseSlug, lesson.order),
                 script: lesson.script,
                 onStart: () => {
                     if (!cancelled) setIsSpeaking(true);
@@ -180,7 +183,11 @@ export function LessonRunner({
                 setMobileTab("lesson");
                 if (!isMuted) {
                     void playFeedback(
-                        `/play-audio/${courseSlug}/${lesson.order}-success.mp3`,
+                        getLessonFeedbackUrl(
+                            courseSlug,
+                            lesson.order,
+                            "success",
+                        ),
                         lesson.successScript,
                     );
                 }
@@ -192,7 +199,11 @@ export function LessonRunner({
                 setMobileTab("lesson");
                 if (!isMuted) {
                     void playFeedback(
-                        `/play-audio/${courseSlug}/${lesson.order}-encourage.mp3`,
+                        getLessonFeedbackUrl(
+                            courseSlug,
+                            lesson.order,
+                            "encourage",
+                        ),
                         lesson.encourageScript,
                     );
                 }
@@ -234,7 +245,9 @@ export function LessonRunner({
     const handlePlayScript = () => {
         ttsHandleRef.current?.stop();
         playTts({
-            audioPath: lesson.audioPath ?? `/play-audio/${courseSlug}/${lesson.order}.mp3`,
+            audioPath:
+                lesson.audioPath ??
+                getLessonAudioUrl(courseSlug, lesson.order),
             script: lesson.script,
             onStart: () => setIsSpeaking(true),
             onEnd: () => setIsSpeaking(false),
