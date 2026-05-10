@@ -1,7 +1,9 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useEffect, useState } from "react";
 import type { EditorProps } from "@monaco-editor/react";
+import { MobileCodeEditor } from "./mobile-code-editor";
 
 /**
  * Wrapper Monaco editor — caricato dynamic per evitare SSR (Monaco
@@ -13,6 +15,11 @@ import type { EditorProps } from "@monaco-editor/react";
  * - format on paste: per HTML incollato
  * - suggestion + parameter hints visibili
  * - line numbers e indentation guides per orientamento visivo
+ *
+ * Su mobile (coarse pointer o viewport < lg) Monaco viene SOSTITUITO
+ * dal MobileCodeEditor — Monaco non apre la tastiera iOS in modo
+ * affidabile e con font 13.5px iOS auto-zoomma il viewport rompendo
+ * il layout. La textarea nativa con font-size 16px risolve entrambe.
  */
 const Editor = dynamic<EditorProps>(
     () => import("@monaco-editor/react").then((m) => m.default),
@@ -33,12 +40,50 @@ export type CodeEditorProps = {
     language?: string;
 };
 
+/**
+ * Hook che ritorna `true` quando il device è mobile-style: coarse pointer
+ * (touch) OPPURE viewport < 1024px (lg breakpoint Tailwind).
+ *
+ * Reattivo: si aggiorna se l'utente ruota il device o ridimensiona la
+ * finestra. Server-side ritorna `false` per evitare hydration mismatch
+ * (iOS-specific behavior viene determinato lato client).
+ */
+function useIsMobile(): boolean {
+    const [isMobile, setIsMobile] = useState(false);
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        const coarse = window.matchMedia("(pointer: coarse)");
+        const narrow = window.matchMedia("(max-width: 1023px)");
+        const update = () => setIsMobile(coarse.matches || narrow.matches);
+        update();
+        coarse.addEventListener("change", update);
+        narrow.addEventListener("change", update);
+        return () => {
+            coarse.removeEventListener("change", update);
+            narrow.removeEventListener("change", update);
+        };
+    }, []);
+    return isMobile;
+}
+
 export function CodeEditor({
     value,
     onChange,
     height = "100%",
     language = "html",
 }: CodeEditorProps) {
+    const isMobile = useIsMobile();
+
+    if (isMobile) {
+        return (
+            <MobileCodeEditor
+                value={value}
+                onChange={onChange}
+                height={height}
+            />
+        );
+    }
+
     return (
         <Editor
             height={height}

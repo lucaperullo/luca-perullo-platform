@@ -521,8 +521,12 @@ export function LessonRunner({
                     {/* Keyboard help: come fare < > sulla tastiera italiana.
                         Aperto di default nelle lezioni 1-4 (HTML basics),
                         chiuso dalla 5 in poi. L'utente può comunque
-                        espanderlo con un click; la preferenza è ricordata. */}
-                    <div className="mt-3">
+                        espanderlo con un click; la preferenza è ricordata.
+                        SOLO desktop: su tastiera virtuale mobile i
+                        consigli "tasto a sinistra dello Z" sono inutili
+                        e l'icona keyboard veniva tappata generando
+                        focus su elementi piccoli + zoom iOS. */}
+                    <div className="mt-3 hidden lg:block">
                         <KeyboardHelp lessonOrder={lesson.order} />
                     </div>
 
