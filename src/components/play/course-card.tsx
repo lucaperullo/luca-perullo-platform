@@ -3,6 +3,7 @@ import { ArrowRight, Lock } from "lucide-react";
 import type { PlayCourse } from "@/data/play/types";
 import { SUBJECT_META } from "@/data/play/types";
 import { cn } from "@/lib/utils";
+import { BookmarkButton } from "./bookmark-button";
 
 const LEVEL_LABELS: Record<string, string> = {
     base: "Base",
@@ -80,12 +81,18 @@ export function CourseCard({
                         </div>
                     ) : null}
                 </div>
-                {isLive ? (
-                    <ArrowRight
-                        className="h-4 w-4 shrink-0 self-center text-fg-soft"
-                        aria-hidden
-                    />
-                ) : null}
+                <div className="flex shrink-0 items-center gap-2 self-center">
+                    {/* BookmarkButton è un client component: vive
+                        dentro il <Link> della card ma fa preventDefault
+                        per non navigare al click sulla stella. */}
+                    <BookmarkButton slug={course.slug} size="sm" />
+                    {isLive ? (
+                        <ArrowRight
+                            className="h-4 w-4 text-fg-soft"
+                            aria-hidden
+                        />
+                    ) : null}
+                </div>
             </div>
         </div>
     );

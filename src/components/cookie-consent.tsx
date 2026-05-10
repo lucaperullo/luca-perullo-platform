@@ -1,6 +1,14 @@
+/* eslint-disable react-hooks/set-state-in-effect --
+   Componente con typewriter + dialog stateful: la regola React 19
+   lamenta i setState negli effect, ma qui sono pattern legittimi
+   (booting da localStorage, animazione lettera-per-lettera, sync con
+   chiusura modale). Riscriverli con useSyncExternalStore + reducer
+   è più rumore che valore — preferiamo silenziare la regola per
+   questo file. */
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { bustAnchor } from "./shared-bust";
 import { useReducedMotion } from "./use-reduced-motion";
@@ -135,6 +143,13 @@ export function CookieConsent() {
     const [activeChoice, setActiveChoice] = useState(0);
     const [showGem, setShowGem] = useState(false);
     const [toast, setToast] = useState<string | null>(null);
+
+    // Sulle pagine lezione (full-viewport-fixed UI con preview iframe e
+    // editor) il pin floating "Gestisci cookie" si sovrappone al
+    // bottone Verifica del footer. Lo nascondiamo lì — l'utente può
+    // gestire il consenso da qualsiasi altra pagina del sito.
+    const pathname = usePathname();
+    const isLessonPage = /^\/play\/[^/]+\/\d+/.test(pathname || "");
     const [prefs, setPrefs] = useState({
         functional: false,
         analytics: false,
@@ -604,7 +619,7 @@ export function CookieConsent() {
                 </section>
             ) : null}
 
-            {showGem ? (
+            {showGem && !isLessonPage ? (
                 <button
                     type="button"
                     onClick={reopenForManage}

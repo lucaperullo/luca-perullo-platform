@@ -1,9 +1,11 @@
 /**
  * Aggregatore curriculum /play.
  *
- * 27 corsi totali distribuiti su 7 materie e 4 livelli.
+ * 36 corsi totali distribuiti su 7 materie e 4 livelli.
  * AI a 360° è la materia più estesa con 12 corsi (dal primo prompt
- * agli agenti con MCP).
+ * agli agenti con MCP). 9 corsi "must-have 2026" coprono i gap più
+ * richiesti dal mercato: TypeScript, Tailwind, Accessibility,
+ * Testing, Web Vitals, Cybersecurity, Cloud Edge, Python, Mobile.
  *
  * I corsi "live" hanno contenuto completo (lezioni cumulative).
  * I corsi "soon" hanno solo metadati ricchi: titolo, descrizione,
@@ -11,7 +13,14 @@
  */
 import type { Lesson, Module, PlayCourse, PlaySubject } from "./types";
 import { playCourse as primoSitoCourse } from "@/data/play-courses";
+import { accessibilitaWcagCourse } from "./courses/accessibilita-wcag";
+import { animazioniAvanzateCourse } from "./courses/animazioni-avanzate";
+import { formsHtml5Course } from "./courses/forms-html5";
+import { htmlSemanticoCourse } from "./courses/html-semantico";
+import { layoutModernoCourse } from "./courses/layout-moderno";
 import { portfolioPersonaleCourse } from "./courses/portfolio-personale";
+import { tailwindUtilityFirstCourse } from "./courses/tailwind-utility-first";
+import { tipografiaDesignCourse } from "./courses/tipografia-design";
 
 // ─────────────────────────────────────────────────────────────────────────
 // Curriculum completo — 17 corsi
@@ -20,90 +29,18 @@ import { portfolioPersonaleCourse } from "./courses/portfolio-personale";
 export const playCourses: PlayCourse[] = [
     primoSitoCourse,
     portfolioPersonaleCourse,
+    tailwindUtilityFirstCourse,
+    // ── batch live aprile-maggio 2026 (6 corsi paralleli) ──
+    htmlSemanticoCourse,
+    formsHtml5Course,
+    tipografiaDesignCourse,
+    layoutModernoCourse,
+    animazioniAvanzateCourse,
+    accessibilitaWcagCourse,
 
-    // ─── HTML & Markup
-    {
-        slug: "html-semantico",
-        title: "HTML semantico (e accessibile)",
-        subtitle:
-            "Tag che parlano: header, nav, article, aside, role, aria. Il sito che Google ama e lo screen reader capisce.",
-        description:
-            "Il 90% dei siti usa <div> ovunque. Il 10% che spicca usa il tag giusto al posto giusto. Imparerai gerarchia di heading, landmark roles, attributi aria, ed errori comuni di accessibilità che escludono il 15% degli utenti dal tuo sito senza che te ne accorga.",
-        level: "base",
-        subjects: ["html"],
-        durationMin: 35,
-        status: "soon",
-        initialCode: "",
-        finalCode: "",
-        modules: [],
-        lessons: [],
-    },
-    {
-        slug: "forms-html5",
-        title: "Forms HTML5 evoluti",
-        subtitle:
-            "Form che catturano lead davvero: validazione native, multi-step, accessibilità, anti-spam.",
-        description:
-            "Un form di contatto è il punto in cui un visitatore diventa lead. Imparerai a costruirne uno che funziona: validazione client-side senza JavaScript, errori chiari, campi condizionali, integrazione con servizi email tipo Resend, anti-spam con honeypot.",
-        level: "intermedio",
-        subjects: ["html", "javascript"],
-        durationMin: 45,
-        status: "soon",
-        initialCode: "",
-        finalCode: "",
-        modules: [],
-        lessons: [],
-    },
-
-    // ─── CSS & Design
-    {
-        slug: "tipografia-design",
-        title: "Tipografia che parla",
-        subtitle:
-            "Coppie di font, scale tipografiche, leading, letter-spacing. Trasforma testo in design.",
-        description:
-            "Il 70% del web è tipografia. Imparerai a scegliere font che si parlano (display + body), a costruire una scala tipografica modulare, a giocare con leading e letter-spacing per creare gerarchia. Bonus: variable fonts e font-display per performance.",
-        level: "intermedio",
-        subjects: ["css"],
-        durationMin: 40,
-        status: "soon",
-        initialCode: "",
-        finalCode: "",
-        modules: [],
-        lessons: [],
-    },
-    {
-        slug: "layout-moderno",
-        title: "Layout moderno: Grid + Container Queries",
-        subtitle:
-            "Oltre le media query: subgrid, container queries, intrinsic web design.",
-        description:
-            "Le media query (max-width: 768px) sono il passato. Il presente è il container query: 'questo componente si adatta in base alla SUA larghezza, non a quella del viewport'. Imparerai subgrid, container queries, has(), e i nuovi pattern che permettono layout responsive senza media query.",
-        level: "avanzato",
-        subjects: ["css"],
-        durationMin: 55,
-        status: "soon",
-        initialCode: "",
-        finalCode: "",
-        modules: [],
-        lessons: [],
-    },
-    {
-        slug: "animazioni-avanzate",
-        title: "Animazioni che fanno girare la testa",
-        subtitle:
-            "View Transitions API, scroll-driven animations, keyframes orchestrati.",
-        description:
-            "Le animazioni che vedi sui siti Apple/Linear sono fatte con queste tecniche. View Transitions API per transizioni di stato pulite, animation-timeline per scroll-driven, custom cursor, hover-lift orchestrati. Niente librerie esterne (Framer Motion non serve), solo CSS e qualche riga di JS.",
-        level: "avanzato",
-        subjects: ["css", "javascript"],
-        durationMin: 50,
-        status: "soon",
-        initialCode: "",
-        finalCode: "",
-        modules: [],
-        lessons: [],
-    },
+    // (i corsi html-semantico, forms-html5, tipografia-design,
+    // layout-moderno, animazioni-avanzate sono ora live e definiti
+    // nei rispettivi file ./courses/*.ts importati in cima.)
 
     // ─── JavaScript
     {
@@ -473,6 +410,147 @@ export const playCourses: PlayCourse[] = [
         level: "pro",
         subjects: ["ai-tools", "fullstack"],
         durationMin: 90,
+        status: "soon",
+        initialCode: "",
+        finalCode: "",
+        modules: [],
+        lessons: [],
+    },
+
+    // ─────────────────────────────────────────────────────────────────
+    // 2026 MUST-HAVE — corsi che il mercato chiede esplicitamente.
+    // Ricerca maggio 2026: TypeScript ovunque richiesto, Tailwind
+    // standard, Accessibility (WCAG) obbligatoria per legge UE,
+    // Testing/Performance/Cybersecurity skill ad alto valore,
+    // Cloud edge dominante, Python+ML porta a $160k+ NLP roles,
+    // React Native top mobile skill.
+    // ─────────────────────────────────────────────────────────────────
+
+    // ─── TypeScript: il salto fondamentale del frontend moderno
+    {
+        slug: "typescript-pratico",
+        title: "TypeScript senza paura (per chi sa già JS)",
+        subtitle:
+            "Tipi che ti salvano dalle 3 di notte: union, narrowing, generics, satisfies. Da JS a TS in 2 ore.",
+        description:
+            "Nel 2026 quasi tutti i progetti seri usano TypeScript: lo standard di Next.js, lo standard delle big tech, lo standard di chi non vuole bug a runtime. Imparerai i tipi base (string, number, ma anche union 'success' | 'error'), narrowing con typeof/instanceof, interfacce e types, generics che fanno funzioni riutilizzabili (Array<T>, Promise<T>), il keyword `satisfies` (versione moderna di `as`), e i pattern critici: optional fields, discriminated unions, `Pick`/`Omit`/`Partial`. Il corso è volutamente pratico: ogni concetto ha un esempio reale tratto dal lavoro freelance.",
+        level: "intermedio",
+        subjects: ["javascript"],
+        durationMin: 90,
+        status: "soon",
+        initialCode: "",
+        finalCode: "",
+        modules: [],
+        lessons: [],
+    },
+
+    // (tailwind-utility-first è ora live, definito in
+    // ./courses/tailwind-utility-first.ts e importato in cima)
+
+    // (accessibilita-wcag è ora live, definito in
+    // ./courses/accessibilita-wcag.ts e importato in cima)
+
+    // ─── Testing: ormai obbligatorio in produzione
+    {
+        slug: "testing-moderno",
+        title: "Testing moderno: Vitest + Playwright",
+        subtitle:
+            "Unit test, integration, end-to-end. Dormi la notte sapendo che il deploy non rompe nulla.",
+        description:
+            "Senza test, ogni deploy è una preghiera. Imparerai i 3 livelli del testing moderno: unit (Vitest, sostituto di Jest che è 5x più veloce e nativo Vite) per testare funzioni e componenti React isolati, integration (Testing Library) per testare interazioni utente sui componenti, end-to-end (Playwright, ufficiale Microsoft) per testare flussi completi nel vero browser. Best practice 2026: cosa testare e cosa NO, mocking server-side con MSW, snapshot test ragionati, CI/CD con GitHub Actions. Avrai un repo con coverage > 80% senza essere ossessivo.",
+        level: "avanzato",
+        subjects: ["javascript", "react"],
+        durationMin: 90,
+        status: "soon",
+        initialCode: "",
+        finalCode: "",
+        modules: [],
+        lessons: [],
+    },
+
+    // ─── Web Vitals: ranking Google + UX critical
+    {
+        slug: "web-vitals-performance",
+        title: "Performance web: Core Web Vitals & ottimizzazione",
+        subtitle:
+            "LCP, INP, CLS sotto le soglie Google. Lazy loading, caching, bundle splitting, image optimization.",
+        description:
+            "Sito lento = clienti persi + ranking Google in caduta. Imparerai i Core Web Vitals 2026 (LCP < 2.5s, INP < 200ms — sostituisce FID, CLS < 0.1) e come ottimizzarli sul serio: lazy loading di immagini con loading='lazy' nativo, code splitting con dynamic imports Next.js, font display swap, preconnect/prefetch per third-party, caching strategy con Cloudflare, bundle analysis con @next/bundle-analyzer per scoprire quali dependency pesano davvero. Tool reali: Lighthouse CI, PageSpeed Insights, WebPageTest. Risultato: passi da 'verdi solo qualche volta' a verdi sempre.",
+        level: "avanzato",
+        subjects: ["css", "fullstack"],
+        durationMin: 75,
+        status: "soon",
+        initialCode: "",
+        finalCode: "",
+        modules: [],
+        lessons: [],
+    },
+
+    // ─── Cybersecurity web: PMI italiane lo cercano molto
+    {
+        slug: "sicurezza-web",
+        title: "Sicurezza web: OWASP Top 10 in pratica",
+        subtitle:
+            "XSS, CSRF, SQL injection, auth sicura, secret management. Niente più 'admin/admin' né credenziali in chiaro.",
+        description:
+            "Le PMI italiane sono target n°1 dei cyber attack — e cercano disperatamente sviluppatori che sanno proteggerle. Imparerai l'OWASP Top 10 in pratica: XSS (cross-site scripting) e perché React ti protegge per default ma non sempre, CSRF e i token anti-falsificazione, SQL injection (anche se usi un ORM), broken auth (rate limiting, password rules che hanno senso), security headers (CSP, HSTS, X-Frame-Options), secret management (mai .env nel repo, rotation di chiavi). Bonus: penetration testing base con strumenti gratis tipo OWASP ZAP. Skill che ti distingue immediatamente nel mercato freelance.",
+        level: "avanzato",
+        subjects: ["backend", "fullstack"],
+        durationMin: 80,
+        status: "soon",
+        initialCode: "",
+        finalCode: "",
+        modules: [],
+        lessons: [],
+    },
+
+    // ─── Cloud Deploy edge: dove i siti vivono nel 2026
+    {
+        slug: "cloud-deploy-edge",
+        title: "Deploy moderno: Vercel, Cloudflare, Edge functions",
+        subtitle:
+            "Da localhost a produzione mondiale in 5 minuti. Static, ISR, SSR, edge computing — quale per cosa.",
+        description:
+            "Il 'mettere online un sito' è cambiato radicalmente. Imparerai la mappa moderna del deploy: Vercel (l'home di Next.js: zero-config, preview per ogni PR, auto-rollback), Cloudflare Pages + Workers (edge globale, gratis fino a 100k req/giorno, KV/D1 inclusi), Netlify, e quando ha senso un VPS classico (Hetzner, DigitalOcean). Capirai le strategie di rendering: static (massimo veloce ma non dinamico), ISR (revalidate ogni N min), SSR per dati real-time, RSC streaming. Bonus: edge functions con Cloudflare Workers per esperienze < 50ms ovunque nel mondo. Setup CI/CD con GitHub → deploy automatico.",
+        level: "intermedio",
+        subjects: ["fullstack"],
+        durationMin: 70,
+        status: "soon",
+        initialCode: "",
+        finalCode: "",
+        modules: [],
+        lessons: [],
+    },
+
+    // ─── Python: porta a tutto AI/ML/data
+    {
+        slug: "python-da-zero",
+        title: "Python da zero per chi viene da JavaScript",
+        subtitle:
+            "Sintassi essenziale, list comprehension, decorators. La porta verso AI/ML, data, scripting, automazione.",
+        description:
+            "Python è ufficialmente il linguaggio #1 al mondo (GitHub Octoverse 2025) e domina AI, data science, automazione. Se vieni da JavaScript la curva è bassa: imparerai le 5 differenze chiave (indentation, snake_case, list comprehension, decorators, type hints), come strutturare un progetto Python (venv, pyproject.toml, pyenv per multi-versioni), le librerie standard più utili (requests, pathlib, json, csv, argparse), e ti porto su una mini-pipeline di scraping + analysis. Da qui il cammino è aperto: pandas/numpy per data, FastAPI per API, PyTorch per ML, LangChain per AI agent.",
+        level: "base",
+        subjects: ["backend", "ai-tools"],
+        durationMin: 80,
+        status: "soon",
+        initialCode: "",
+        finalCode: "",
+        modules: [],
+        lessons: [],
+    },
+
+    // ─── React Native + Expo: top mobile skill 2026
+    {
+        slug: "react-native-mobile",
+        title: "App mobile vere con React Native + Expo",
+        subtitle:
+            "Una codebase, due piattaforme (iOS + Android). Da web a mobile in 1 corso, store-ready in 1 settimana.",
+        description:
+            "Il 80% del tuo codice React funziona su React Native — sfrutti quello che già sai per fare app mobile native. Imparerai: setup Expo (l'ambiente moderno, niente più Xcode/Android Studio per cose base), navigazione con expo-router (file-based come Next.js), componenti core (View invece di div, Text invece di p), styling con Tailwind via NativeWind, gestione stato (Zustand pattern), accesso a sensori (camera, GPS, contacts), build e pubblicazione su App Store + Google Play con EAS Build (cloud, no Mac richiesto per Android). Esercizio finale: app fitness/contatore funzionante su entrambi gli store.",
+        level: "avanzato",
+        subjects: ["react", "fullstack"],
+        durationMin: 100,
         status: "soon",
         initialCode: "",
         finalCode: "",

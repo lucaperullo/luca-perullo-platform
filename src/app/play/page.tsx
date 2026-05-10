@@ -27,7 +27,7 @@ import { cn } from "@/lib/utils";
 export const metadata: Metadata = {
     title: "Play · Corsi interattivi · Luca Perullo",
     description:
-        "Curriculum completo: 7 materie, 4 livelli, 27 corsi. Dalle prime righe di HTML agli agenti AI con MCP, passando per vibe coding, immagini, video e RAG.",
+        "Curriculum completo: 7 materie, 4 livelli, 36 corsi. Dalle prime righe di HTML agli agenti AI con MCP, passando per TypeScript, Tailwind, Accessibility, Testing, Performance, Cybersecurity, Mobile.",
     alternates: { canonical: "/play" },
 };
 

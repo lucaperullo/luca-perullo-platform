@@ -11,6 +11,7 @@ import {
     Lightbulb,
     PlayCircle,
     RotateCcw,
+    Settings,
     Volume2,
     VolumeX,
     X,
@@ -23,7 +24,9 @@ import { CodeEditor } from "./code-editor";
 import { KeyboardHelp } from "./keyboard-help";
 import { LessonTips } from "./lesson-tips";
 import { LivePreview, type LivePreviewHandle } from "./live-preview";
+import { LessonDialogOverlay } from "./lesson-dialog-overlay";
 import { LottieAvatar } from "./lottie-avatar";
+import { VoicePackModal } from "./voice-pack-modal";
 import { WelcomeModal } from "./welcome-modal";
 import { validate } from "./exercise-validator";
 import {
@@ -73,6 +76,11 @@ export function LessonRunner({
     const [avatarMood, setAvatarMood] = useState<AvatarMood>(lesson.avatarMood);
     const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">(
         "desktop",
+    );
+    // Tab attivo SOLO su mobile (< lg breakpoint). Su desktop tutti i
+    // 3 pannelli sono visibili in 3 colonne, lo state non viene letto.
+    const [mobileTab, setMobileTab] = useState<"lesson" | "code" | "preview">(
+        "lesson",
     );
 
     const previewRef = useRef<LivePreviewHandle>(null);
@@ -130,7 +138,7 @@ export function LessonRunner({
         let cancelled = false;
         (async () => {
             const handle = await playTts({
-                audioPath: lesson.audioPath ?? `/play-audio/${lesson.order}.mp3`,
+                audioPath: lesson.audioPath ?? `/play-audio/${courseSlug}/${lesson.order}.mp3`,
                 script: lesson.script,
                 onStart: () => {
                     if (!cancelled) setIsSpeaking(true);
@@ -166,16 +174,27 @@ export function LessonRunner({
                 });
                 setRun({ kind: "success" });
                 setAvatarMood("happy");
+                // Su mobile, riporta l'utente al tab Lezione per fargli
+                // vedere il messaggio di successo (e poi cliccare il
+                // bottone Prossima nel footer).
+                setMobileTab("lesson");
                 if (!isMuted) {
-                    speakOnce(lesson.successScript, () => setIsSpeaking(false));
-                    setIsSpeaking(true);
+                    void playFeedback(
+                        `/play-audio/${courseSlug}/${lesson.order}-success.mp3`,
+                        lesson.successScript,
+                    );
                 }
             } else {
                 setRun({ kind: "error", message: result.message });
                 setAvatarMood("encouraging");
+                // Stesso ragionamento: il dettaglio dell'errore + hint
+                // sta nel pannello Lezione, portalo lì.
+                setMobileTab("lesson");
                 if (!isMuted) {
-                    speakOnce(lesson.encourageScript, () => setIsSpeaking(false));
-                    setIsSpeaking(true);
+                    void playFeedback(
+                        `/play-audio/${courseSlug}/${lesson.order}-encourage.mp3`,
+                        lesson.encourageScript,
+                    );
                 }
             }
         }, 100);
@@ -215,7 +234,7 @@ export function LessonRunner({
     const handlePlayScript = () => {
         ttsHandleRef.current?.stop();
         playTts({
-            audioPath: lesson.audioPath ?? `/play-audio/${lesson.order}.mp3`,
+            audioPath: lesson.audioPath ?? `/play-audio/${courseSlug}/${lesson.order}.mp3`,
             script: lesson.script,
             onStart: () => setIsSpeaking(true),
             onEnd: () => setIsSpeaking(false),
@@ -262,24 +281,44 @@ export function LessonRunner({
                 una lezione. Si auto-disattiva dopo. */}
             <WelcomeModal />
 
+            {/* Voice-pack modal — appare DOPO il WelcomeModal alla prima
+                lezione, una sola volta, per scegliere se usare la voce
+                clonata di Luca / la voce del sistema / mute. */}
+            <VoicePackModal />
+
+            {/* Dialog overlay video-game style: mostra il testo dello
+                script quando l'avatar parla MA l'utente è su un tab
+                diverso da "Lezione" (Codice o Anteprima). Solo mobile.
+                Su desktop il pannello aside è sempre visibile. */}
+            <LessonDialogOverlay
+                text={lesson.script}
+                visible={isSpeaking && mobileTab !== "lesson"}
+            />
+
             {/* Top bar: breadcrumb + progress */}
-            <div className="flex items-center justify-between gap-4 border-b border-border bg-bg-alt px-4 py-2.5 sm:px-6">
-                <div className="flex min-w-0 items-center gap-2.5">
+            <div className="flex items-center justify-between gap-3 border-b border-border bg-bg-alt px-3 py-2 sm:px-6 sm:py-2.5">
+                <div className="flex min-w-0 items-center gap-2">
                     <Link
                         href={`/play/${courseSlug}`}
-                        className="press inline-flex shrink-0 items-center gap-1.5 rounded-md border border-border bg-bg px-2.5 py-1.5 font-mono text-[10.5px] uppercase tracking-[0.08em] text-fg-muted hover:text-fg"
+                        aria-label="Torna all'indice del corso"
+                        className="press inline-flex shrink-0 items-center gap-1.5 rounded-md border border-border bg-bg px-2 py-1.5 font-mono text-[10.5px] uppercase tracking-[0.08em] text-fg-muted hover:text-fg sm:px-2.5"
                     >
                         <ArrowLeft className="h-3 w-3" aria-hidden />
-                        Indice
+                        <span className="hidden sm:inline">Indice</span>
                     </Link>
-                    <span className="font-mono text-[10.5px] uppercase tracking-[0.12em] text-fg-soft truncate">
+                    {/* Su mobile mostriamo solo il numero lezione, niente
+                        modulo: lo spazio non c'è e l'info è nel tab attivo. */}
+                    <span className="hidden truncate font-mono text-[10.5px] uppercase tracking-[0.12em] text-fg-soft sm:inline">
                         {courseTitle ? `${courseTitle} · ` : ""}
                         Modulo {String(module.order).padStart(2, "0")} ·{" "}
                         {module.title}
                     </span>
+                    <span className="font-mono text-[10.5px] uppercase tracking-[0.12em] text-fg-soft sm:hidden">
+                        {lesson.title}
+                    </span>
                 </div>
-                <div className="flex items-center gap-3">
-                    <span className="font-mono text-[10.5px] uppercase tracking-[0.12em] text-fg-soft">
+                <div className="flex items-center gap-2 sm:gap-3">
+                    <span className="font-mono text-[10.5px] tabular-nums uppercase tracking-[0.12em] text-fg-soft">
                         {lesson.order}/{totalLessons}
                     </span>
                     <div className="hidden h-1.5 w-32 overflow-hidden rounded-full bg-border-strong/50 md:block">
@@ -294,10 +333,45 @@ export function LessonRunner({
                 </div>
             </div>
 
-            {/* Body: 3-col grid on desktop, stacked on mobile */}
+            {/* Tab switcher — SOLO mobile (< lg). Su desktop le 3 colonne
+                sono già visibili insieme nella griglia sotto. */}
+            <div className="flex items-stretch border-b border-border bg-bg lg:hidden">
+                <MobileTab
+                    active={mobileTab === "lesson"}
+                    onClick={() => setMobileTab("lesson")}
+                    badge={
+                        run.kind === "success"
+                            ? "ok"
+                            : run.kind === "error"
+                              ? "err"
+                              : null
+                    }
+                >
+                    Lezione
+                </MobileTab>
+                <MobileTab
+                    active={mobileTab === "code"}
+                    onClick={() => setMobileTab("code")}
+                >
+                    Codice
+                </MobileTab>
+                <MobileTab
+                    active={mobileTab === "preview"}
+                    onClick={() => setMobileTab("preview")}
+                >
+                    Anteprima
+                </MobileTab>
+            </div>
+
+            {/* Body: 3-col grid on desktop, single tab on mobile */}
             <div className="flex-1 grid grid-cols-1 overflow-hidden lg:grid-cols-[340px_1fr_1fr]">
                 {/* Pannello sinistro: avatar + script + esercizio */}
-                <aside className="flex flex-col overflow-y-auto border-b border-border bg-bg-alt p-5 lg:border-b-0 lg:border-r">
+                <aside
+                    className={cn(
+                        "flex-col overflow-y-auto border-b border-border bg-bg-alt p-5 lg:flex lg:border-b-0 lg:border-r",
+                        mobileTab === "lesson" ? "flex" : "hidden",
+                    )}
+                >
                     <div className="flex items-start gap-3.5">
                         <LottieAvatar
                             mood={avatarMood}
@@ -351,6 +425,21 @@ export function LessonRunner({
                                     Audio
                                 </>
                             )}
+                        </button>
+                        {/* Settings gear: riapre il modale voce per
+                            cambiare preferenza in qualunque momento. */}
+                        <button
+                            type="button"
+                            onClick={() =>
+                                window.dispatchEvent(
+                                    new Event("lp-play-voice-pack-open"),
+                                )
+                            }
+                            aria-label="Impostazioni voce"
+                            title="Cambia voce"
+                            className="press inline-flex h-[26px] w-[26px] items-center justify-center rounded-md border border-border bg-bg text-fg-muted hover:text-fg"
+                        >
+                            <Settings className="h-3 w-3" aria-hidden />
                         </button>
                     </div>
 
@@ -415,7 +504,12 @@ export function LessonRunner({
                 </aside>
 
                 {/* Editor */}
-                <div className="flex flex-col overflow-hidden border-b border-border lg:border-b-0 lg:border-r">
+                <div
+                    className={cn(
+                        "flex-col overflow-hidden border-b border-border lg:flex lg:border-b-0 lg:border-r",
+                        mobileTab === "code" ? "flex" : "hidden lg:flex",
+                    )}
+                >
                     <div className="flex items-center justify-between border-b border-zinc-800 bg-[#1e1e1e] px-3 py-2">
                         <span className="font-mono text-[10.5px] uppercase tracking-[0.12em] text-zinc-400">
                             index.html
@@ -461,7 +555,12 @@ export function LessonRunner({
                 </div>
 
                 {/* Preview */}
-                <div className="flex flex-col overflow-hidden bg-bg">
+                <div
+                    className={cn(
+                        "flex-col overflow-hidden bg-bg lg:flex",
+                        mobileTab === "preview" ? "flex" : "hidden lg:flex",
+                    )}
+                >
                     <div className="flex items-center justify-between border-b border-border bg-bg-alt px-3 py-2">
                         <span className="font-mono text-[10.5px] uppercase tracking-[0.12em] text-fg-muted">
                             Anteprima live
@@ -510,25 +609,28 @@ export function LessonRunner({
                 </div>
             </div>
 
-            {/* Footer azioni */}
-            <div className="flex items-center justify-between gap-3 border-t border-border bg-bg-alt px-4 py-3 sm:px-6">
-                <div className="flex items-center gap-2">
+            {/* Footer azioni — sticky in fondo, primario sempre raggiungibile */}
+            <div className="flex items-center justify-between gap-2 border-t border-border bg-bg-alt px-3 py-2.5 sm:gap-3 sm:px-6 sm:py-3">
+                <div className="flex shrink-0 items-center gap-2">
                     {lesson.order > 1 ? (
                         <Link
                             href={`/play/${courseSlug}/${lesson.order - 1}`}
-                            className="press inline-flex items-center gap-1.5 rounded-md border border-border-strong bg-bg px-3 py-2 font-mono text-[10.5px] uppercase tracking-[0.08em] text-fg hover:bg-bg-alt"
+                            aria-label="Lezione precedente"
+                            className="press inline-flex items-center gap-1.5 rounded-md border border-border-strong bg-bg px-2.5 py-2 font-mono text-[10.5px] uppercase tracking-[0.08em] text-fg hover:bg-bg-alt sm:px-3"
                         >
                             <ArrowLeft className="h-3 w-3" aria-hidden />
-                            Precedente
+                            <span className="hidden sm:inline">
+                                Precedente
+                            </span>
                         </Link>
                     ) : null}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-1 items-center justify-end gap-2 sm:flex-initial">
                     {run.kind === "success" ? (
                         <button
                             type="button"
                             onClick={handleNext}
-                            className="press inline-flex items-center gap-2 rounded-md border border-accent bg-accent px-4 py-2 font-mono text-[11px] uppercase tracking-[0.08em] text-bg hover:bg-accent/90"
+                            className="press inline-flex w-full items-center justify-center gap-2 rounded-md border border-accent bg-accent px-4 py-2 font-mono text-[11px] uppercase tracking-[0.08em] text-bg hover:bg-accent/90 sm:w-auto"
                         >
                             {lesson.order < totalLessons
                                 ? "Prossima"
@@ -542,7 +644,7 @@ export function LessonRunner({
                             disabled={
                                 run.kind === "validating" || showSolution
                             }
-                            className="press inline-flex items-center gap-2 rounded-md border border-fg bg-fg px-4 py-2 font-mono text-[11px] uppercase tracking-[0.08em] text-bg hover:bg-fg/90 disabled:cursor-not-allowed disabled:opacity-60"
+                            className="press inline-flex w-full items-center justify-center gap-2 rounded-md border border-fg bg-fg px-4 py-2 font-mono text-[11px] uppercase tracking-[0.08em] text-bg hover:bg-fg/90 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                         >
                             {run.kind === "validating"
                                 ? "Verifico…"
@@ -553,6 +655,48 @@ export function LessonRunner({
                 </div>
             </div>
         </div>
+    );
+}
+
+/**
+ * Tab mobile dello switcher in cima al body. Solo visibile sotto lg.
+ * Mostra un pallino piccolo (status) sul tab Lezione quando l'utente
+ * ha appena verificato (success o error) ed è su un altro tab — così
+ * sa che c'è qualcosa da vedere lì.
+ */
+function MobileTab({
+    active,
+    onClick,
+    children,
+    badge,
+}: {
+    active: boolean;
+    onClick: () => void;
+    children: React.ReactNode;
+    badge?: "ok" | "err" | null;
+}) {
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            className={cn(
+                "press relative flex-1 px-3 py-2.5 font-mono text-[11px] uppercase tracking-[0.08em] transition-colors",
+                active
+                    ? "border-b-2 border-fg text-fg"
+                    : "border-b-2 border-transparent text-fg-muted hover:text-fg",
+            )}
+        >
+            {children}
+            {!active && badge ? (
+                <span
+                    aria-hidden
+                    className={cn(
+                        "absolute right-2 top-2 h-1.5 w-1.5 rounded-full",
+                        badge === "ok" ? "bg-accent" : "bg-fg",
+                    )}
+                />
+            ) : null}
+        </button>
     );
 }
 
@@ -569,18 +713,24 @@ const progressSubscribe = (cb: () => void) => {
     };
 };
 
-function speakOnce(text: string, onEnd?: () => void) {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = "it-IT";
-    u.rate = 1.05;
-    u.onend = () => onEnd?.();
-    u.onerror = () => onEnd?.();
-    const voices = window.speechSynthesis.getVoices();
-    const itVoice =
-        voices.find((v) => v.lang === "it-IT") ??
-        voices.find((v) => v.lang.startsWith("it"));
-    if (itVoice) u.voice = itVoice;
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(u);
+/**
+ * Riproduce uno script di feedback (success o encourage) usando
+ * il TTS player principale → cerca prima l'MP3 pre-renderizzato
+ * con la voce di Luca, fallback gestito da preference utente
+ * (mai più speechSynthesis fortuito qui).
+ *
+ * Nota: questa funzione vive fuori dal componente perché richiede
+ * di avere accesso a setIsSpeaking via closure dalla call site.
+ * In realtà il setIsSpeaking lo passiamo tramite onStart/onEnd.
+ */
+async function playFeedback(audioPath: string, script: string): Promise<void> {
+    const handle = await playTts({
+        audioPath,
+        script,
+        // onStart/onEnd: il lesson runner scope già aggiorna isSpeaking
+        // tramite il TTS principale del mount. Per i feedback è ok
+        // lasciarli no-op — l'audio parte e finisce, l'avatar mood
+        // è già stato cambiato dal chiamante.
+    });
+    handle.play();
 }

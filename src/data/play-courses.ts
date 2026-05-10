@@ -206,7 +206,7 @@ export const lessons: LessonType[] = [
         durationSec: 95,
         avatarMood: "talking",
         script:
-            "Adesso facciamo che il titolo riempia tutto lo schermo, centrato. Si chiama hero ed è il primo impatto del sito — pensa alla copertina di una rivista. Mettiamo h1 e p dentro un main con etichetta hero. Poi nel CSS: min-height 100vh fa diventare la sezione alta come tutto lo schermo (vh = altezza viewport). Display flex con direction column dispone i figli in colonna. Justify-content e align-items center li centrano in verticale e orizzontale. Risultato: il testo galleggia esattamente al centro della pagina.",
+            "Pensa alla copertina di una rivista: l'occhio cade lì, decide in 3 secondi se vale la pena leggere. Sul web si chiama hero, ed è la prima e più importante decisione visiva di una pagina. Costruiamola. Mettiamo h1 e p dentro un main con etichetta hero. Tre regole CSS fanno la magia: min-height 100vh rende la sezione alta come tutto lo schermo, display flex con direction column dispone i figli in verticale, justify-content e align-items center li portano al centro perfetto. Risultato: il tuo testo galleggia in mezzo alla pagina, non si può non leggerlo.",
         instruction:
             "1) HTML: avvolgi h1 e p in <main class=\"hero\">. 2) CSS: aggiungi .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 32px; } 3) Rimuovi il padding: 32px dal body (l'ha sostituito hero).",
         hint: "Tre passi: avvolgi il contenuto in <main class=\"hero\">, scrivi la regola .hero con le 6 proprietà, togli il padding dal body.",
@@ -387,7 +387,7 @@ export const lessons: LessonType[] = [
         durationSec: 95,
         avatarMood: "talking",
         script:
-            "Adesso aggiungiamo un header in alto, un'intestazione minimale con il nome del negozio. Lo mettiamo prima della hero. Dentro un h2 con il logo testuale. Lo stiliamo discreto: padding contenuto, font più piccolo del titolone. Diventa un'ancora visiva che dice 'questo è un sito di un'attività'.",
+            "Quando entri in un negozio cerchi sempre l'insegna prima di guardarti intorno. Lo stesso vale sul web. Aggiungiamo un header in alto con il nome del negozio: un'intestazione minimale, prima della hero. Un h2 con il logo testuale, padding contenuto, font più piccolo del titolone. Diventa un'ancora visiva che dice subito \"questo è il sito di un'attività\", non un articolo a caso.",
         instruction:
             "1) HTML: prima di <main class=\"hero\">, aggiungi <header class=\"site-header\"><h2>Studio di Marco</h2></header>. 2) CSS: .site-header { padding: 20px 32px; } .site-header h2 { font-size: 18px; font-weight: 600; letter-spacing: -0.02em; }",
         hint: "Un header sopra il main hero. Dentro un h2 col nome del negozio. Stile minimal: piccolo, ai lati con padding.",
@@ -725,7 +725,7 @@ export const lessons: LessonType[] = [
         durationSec: 100,
         avatarMood: "talking",
         script:
-            "Adesso le card. Sfondo bianco, padding interno generoso, bordi leggermente arrotondati e una piccolissima ombra che le solleva dallo sfondo. Le mettiamo per ora una sotto l'altra, con uno spazio. Nella prossima lezione le mettiamo in fila.",
+            "Le card sono il pattern visivo più usato del web del 2026: prendono qualunque informazione e la rendono un oggetto da toccare con gli occhi. Costruiamole. Sfondo bianco, padding interno generoso, bordi leggermente arrotondati, una piccolissima ombra che le stacca dallo sfondo. Per ora una sotto l'altra con uno spazio. Nella prossima lezione le metteremo in fila — è il momento più soddisfacente del corso.",
         instruction:
             "Aggiungi: .card { background: white; padding: 40px 32px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); margin-bottom: 16px; max-width: 720px; margin-left: auto; margin-right: auto; }",
         hint: "Una sola regola .card. Dentro: background bianco, padding generoso, border-radius 16px, ombra leggera, e max-width per non farle troppo larghe.",
@@ -1014,7 +1014,7 @@ export const lessons: LessonType[] = [
         durationSec: 95,
         avatarMood: "talking",
         script:
-            "Adesso mettiamo le card in fila orizzontale. Le avvolgiamo in un contenitore con etichetta cards e gli mettiamo display flex. Gap mette spazio tra una e l'altra. Aggiungiamo flex-wrap perché su schermi piccoli vadano a capo invece di restringersi all'estremo. Sulle card singole mettiamo flex 1 perché si dividano lo spazio disponibile in parti uguali.",
+            "Eccoci al momento promesso: le card in fila orizzontale. Le avvolgiamo in un contenitore con etichetta cards e gli applichiamo display flex — quattro lettere che dispongono i figli affiancati invece che impilati. Aggiungiamo gap per lo spazio tra una card e l'altra, e flex-wrap perché sui telefoni vadano a capo invece di restringersi a francobollo. Sulle singole card mettiamo flex 1, così si dividono lo spazio in parti uguali. Salva, e guarda: ti si è appena composta una griglia da catalogo professionale.",
         instruction:
             "1) HTML: avvolgi le 3 card in <div class=\"cards\"> dentro la section services. 2) CSS aggiuntivo: .cards { display: flex; gap: 16px; flex-wrap: wrap; max-width: 1100px; margin: 0 auto; padding: 0 16px; } .card { flex: 1 1 280px; margin-bottom: 0; max-width: none; }",
         hint: "Step 1: avvolgi le 3 card in <div class=\"cards\">. Step 2: regola .cards con flex. Step 3: rimuovi margin-bottom e max-width dalle .card e metti flex: 1 1 280px.",
@@ -1516,7 +1516,7 @@ export const lessons: LessonType[] = [
         durationSec: 80,
         avatarMood: "talking",
         script:
-            "Adesso facciamo che cliccando sul bottone della hero, la pagina scenda dolcemente alla sezione servizi. Aggiungiamo un id alla sezione e cambiamo l'href del bottone. Poi, una sola riga di CSS sul tag html: scroll-behavior smooth. Da quel momento qualsiasi link interno scorre fluido invece che con un salto secco.",
+            "Hai mai cliccato su un link interno che ti catapulta in fondo alla pagina con un salto secco? Brutto, no? Lo evitiamo con UNA riga di CSS, e niente di più. Aggiungiamo un id alla sezione servizi, cambiamo l'href del bottone della hero per puntarci, e infine la magia: sul tag html scriviamo scroll-behavior smooth. Una proprietà, e da quel momento tutti i link interni della pagina scorrono fluidi invece di teletrasportarsi. È quel piccolo dettaglio di UX che separa un sito approssimativo da uno che si sente \"giusto\".",
         instruction:
             "1) HTML: alla section services aggiungi id=\"servizi\" → <section class=\"services\" id=\"servizi\">. 2) HTML: cambia href del bottone da \"#\" a \"#servizi\" → <a href=\"#servizi\" class=\"btn\">. 3) CSS: aggiungi html { scroll-behavior: smooth; }",
         hint: "Tre piccoli cambiamenti: id sulla section, href sul bottone, una regola html con scroll-behavior smooth.",

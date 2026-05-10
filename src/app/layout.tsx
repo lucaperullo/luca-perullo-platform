@@ -60,10 +60,23 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        {/* Avoid flash-of-light-mode for users who prefer dark. */}
-        <script dangerouslySetInnerHTML={{ __html: themeBootstrap }} />
+        {/* Avoid flash-of-light-mode for users who prefer dark.
+            suppressHydrationWarning: alcune estensioni (Bitdefender,
+            antitracker aggressivi) strippano o sostituiscono il
+            contenuto inline degli script <head> prima che React
+            idratri, causando un hydration mismatch su questo nodo
+            specifico. È innocuo: lo script si esegue prima che React
+            arrivi e mette la classe sul <html>, l'estensione lo
+            sostituisce DOPO senza intaccare il comportamento. */}
+        <script
+            suppressHydrationWarning
+            dangerouslySetInnerHTML={{ __html: themeBootstrap }}
+        />
       </head>
-      <body className="flex min-h-full flex-col bg-bg text-fg">
+      <body
+        className="flex min-h-full flex-col bg-bg text-fg"
+        suppressHydrationWarning
+      >
         {/*
           Document-level SVG filter defs. Referenced by CSS `filter: url(#…)`
           in components that need shared filters (e.g. the pixel-gray fly

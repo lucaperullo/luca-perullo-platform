@@ -46,3 +46,19 @@ next-env.d.ts
 
 # claude code local state (per-machine; not portable)
 /.claude/
+
+# voice clone pipeline — locale, non committare
+.venv-voice/
+scripts/.lesson-scripts.json
+scripts/__pycache__/
+# i sample audio della voce di Luca restano sulla macchina di Luca
+voce-luca*.wav
+voce-luca*.mp3
+voce-luca*.m4a
+
+# MP3 lezioni — generati localmente da scripts/tts-shortcut-batch.py.
+# Sono ~50-100 MB totali (3 file per lezione × 81 lezioni). Meglio
+# rigenerarli ogni volta o caricarli su CDN esterno (S3/R2) invece
+# di gonfiare il git repo. Per il deploy su Vercel: o build hook
+# che li rigenera, o link a CDN esterno.
+public/play-audio/

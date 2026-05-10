@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowUpRight, LogOut } from "lucide-react";
 import { ProfileForm } from "@/components/auth/profile-form";
+import { BookmarkedCoursesList } from "@/components/play/bookmarked-courses-list";
 import { SectionLabel } from "@/components/section-label";
 import { SectionRule } from "@/components/section-rule";
 import { SideLines } from "@/components/side-lines";
@@ -131,7 +132,21 @@ export default async function ProfiloPage() {
                 <SectionRule />
 
                 <section className="py-10">
-                    <SectionLabel index={2}>I tuoi corsi</SectionLabel>
+                    <SectionLabel index={2}>Corsi salvati</SectionLabel>
+                    <p className="mt-3 max-w-[60ch] text-[14px] text-fg-muted">
+                        I corsi che hai segnato con la stella nel
+                        catalogo. Te li tieni qui per quando vuoi
+                        riprenderli.
+                    </p>
+                    <div className="mt-6">
+                        <BookmarkedCoursesList />
+                    </div>
+                </section>
+
+                <SectionRule />
+
+                <section className="py-10">
+                    <SectionLabel index={3}>I tuoi corsi in corso</SectionLabel>
                     {progress.length === 0 ? (
                         <p className="mt-4 max-w-[60ch] text-[14px] text-fg-muted">
                             Non hai ancora iniziato il corso interattivo.{" "}
@@ -181,7 +196,7 @@ export default async function ProfiloPage() {
                 <SectionRule />
 
                 <section className="py-10">
-                    <SectionLabel index={3}>Riepilogo onboarding</SectionLabel>
+                    <SectionLabel index={4}>Riepilogo onboarding</SectionLabel>
                     <dl className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div className="rounded-md border border-border bg-bg-alt p-4">
                             <dt className="font-mono text-[10.5px] uppercase tracking-[0.12em] text-fg-soft">
@@ -232,7 +247,7 @@ export default async function ProfiloPage() {
                 <SectionRule />
 
                 <section className="py-10">
-                    <SectionLabel index={4}>Account</SectionLabel>
+                    <SectionLabel index={5}>Account</SectionLabel>
                     <div className="mt-6 flex flex-col gap-3">
                         <form action="/auth/logout" method="post">
                             <button
