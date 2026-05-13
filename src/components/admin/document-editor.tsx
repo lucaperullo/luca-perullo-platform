@@ -170,6 +170,10 @@ export function DocumentEditor({ document, items: initialItems, installments: in
       <div className="sticky bottom-0 -mx-4 mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-border bg-bg/95 px-4 py-3 backdrop-blur sm:-mx-8 sm:px-8">
         {error ? <span className="font-mono text-[11px] text-red-600">{error}</span> : <span />}
         <div className="flex items-center gap-2">
+          <a href={`/api/admin/documents/${document.id}/pdf`} target="_blank" rel="noreferrer"
+            className="press rounded-md border border-border-strong bg-bg-alt px-4 py-2 font-mono text-[11.5px] uppercase tracking-[0.08em]">
+            Anteprima PDF
+          </a>
           <button type="button" onClick={save} disabled={saving}
             className="press rounded-md border border-fg bg-fg px-4 py-2 font-mono text-[11.5px] uppercase tracking-[0.08em] text-bg disabled:opacity-50">
             {saving ? "Salvataggio…" : "Salva bozza"}
