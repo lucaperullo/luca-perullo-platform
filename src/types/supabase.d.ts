@@ -95,10 +95,12 @@ declare module "@supabase/supabase-js" {
         ): SupabaseQueryBuilder;
         delete(): SupabaseQueryBuilder;
         eq(column: string, value: unknown): SupabaseQueryBuilder;
+        is(column: string, value: unknown): SupabaseQueryBuilder;
         order(
             column: string,
             opts?: { ascending?: boolean; nullsFirst?: boolean },
         ): SupabaseQueryBuilder;
+        limit(count: number): SupabaseQueryBuilder;
         maybeSingle(): Promise<{
             data: Record<string, unknown> | null;
             error: unknown;
