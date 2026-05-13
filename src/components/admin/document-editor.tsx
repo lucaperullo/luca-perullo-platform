@@ -174,10 +174,33 @@ export function DocumentEditor({ document, items: initialItems, installments: in
             className="press rounded-md border border-border-strong bg-bg-alt px-4 py-2 font-mono text-[11.5px] uppercase tracking-[0.08em]">
             Anteprima PDF
           </a>
-          <button type="button" onClick={save} disabled={saving}
-            className="press rounded-md border border-fg bg-fg px-4 py-2 font-mono text-[11.5px] uppercase tracking-[0.08em] text-bg disabled:opacity-50">
-            {saving ? "Salvataggio…" : "Salva bozza"}
-          </button>
+          {document.status === "draft" ? (
+            <button type="button" onClick={save} disabled={saving}
+              className="press rounded-md border border-fg bg-fg px-4 py-2 font-mono text-[11.5px] uppercase tracking-[0.08em] text-bg disabled:opacity-50">
+              {saving ? "Salvataggio…" : "Salva bozza"}
+            </button>
+          ) : null}
+          {document.status === "draft" ? (
+            <button type="button" onClick={async () => {
+              if (!confirm("Confermi l'emissione? Il numero verrà assegnato e il documento non sarà più editabile.")) return;
+              const r = await fetch(`/api/admin/documents/${document.id}/issue`, { method: "POST" });
+              if (!r.ok) { const j = await r.json().catch(() => ({})); setError(j.error ?? "issue-failed"); return; }
+              router.refresh();
+            }}
+              className="press rounded-md border border-fg bg-fg px-4 py-2 font-mono text-[11.5px] uppercase tracking-[0.08em] text-bg">
+              Emetti
+            </button>
+          ) : null}
+          {document.kind === "invoice" && (document.status === "issued" || document.status === "rejected_sdi") ? (
+            <button type="button" onClick={async () => {
+              const r = await fetch(`/api/admin/documents/${document.id}/transmit`, { method: "POST" });
+              if (!r.ok) { const j = await r.json().catch(() => ({})); setError(j.error ?? "transmit-failed"); return; }
+              router.refresh();
+            }}
+              className="press rounded-md border border-fg bg-fg px-4 py-2 font-mono text-[11.5px] uppercase tracking-[0.08em] text-bg">
+              Trasmetti a SDI
+            </button>
+          ) : null}
         </div>
       </div>
     </div>
