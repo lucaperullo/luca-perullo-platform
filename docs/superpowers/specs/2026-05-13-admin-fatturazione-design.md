@@ -27,6 +27,7 @@ L'admin è una "scrivania interna" brandizzata sopra le API di Fatture in Cloud 
 | Pagamenti | Fuori scope (mai) | IBAN + bonifico istantaneo, niente Stripe |
 | Auth | Supabase magic-link esistente + email gate | Riuso `/accedi`, niente seconda auth |
 | Auth-fail behaviour | `notFound()` (404) | L'esistenza di `/admin` non è scopribile da fuori |
+| Rateizzazione | Una fattura, multiple rate mensili (≥ €500/mese), tracciate riga per riga | Standard `DatiPagamento`/`DettaglioPagamento` di FatturaPA; minimo configurabile in `admin_settings.min_installment_cents` |
 
 ---
 
@@ -100,6 +101,7 @@ create table admin_settings (
   regime_fiscale text not null default 'RF19',
   bollo_threshold_cents int not null default 7747,   -- €77,47
   bollo_amount_cents int not null default 200,       -- €2,00
+  min_installment_cents int not null default 50000,  -- €500,00 minimo per rata mensile
   -- OAuth FiC
   fic_company_id text,
   fic_access_token text,
@@ -157,7 +159,7 @@ create table documents (
   client_id uuid not null references clients(id) on delete restrict,
   client_snapshot jsonb not null,      -- copia anagrafica congelata in issue
   status text not null default 'draft' check (status in (
-    'draft','issued','sent_sdi','delivered_sdi','rejected_sdi','paid','cancelled'
+    'draft','issued','sent_sdi','delivered_sdi','rejected_sdi','partially_paid','paid','cancelled'
   )),
   -- Sync FiC
   sdi_id_fic text,                     -- id documento in FiC
@@ -205,6 +207,35 @@ create table document_items (
   unique (document_id, position)
 );
 ```
+
+### 4.4.1 `document_installments` (rate)
+
+Una riga per ogni rata. Vuota = pagamento in soluzione unica (di fatto: una sola rata implicita pari al totale, alla `due_date` del documento). Compilata = piano rate esplicito.
+
+```sql
+create table document_installments (
+  id uuid primary key default gen_random_uuid(),
+  document_id uuid not null references documents(id) on delete cascade,
+  position int not null,                 -- 1, 2, 3...
+  due_date date not null,
+  amount_cents int not null,
+  paid_at timestamptz,                   -- null = non incassata
+  payment_reference text,                 -- es. CRO bonifico, nota
+  unique (document_id, position)
+);
+create index document_installments_unpaid_idx on document_installments (due_date)
+  where paid_at is null;
+```
+
+**Vincoli applicativi (validati nei route handler, non nel DB)**:
+- `sum(amount_cents) = documents.total_cents` (al penny)
+- `amount_cents >= admin_settings.min_installment_cents` per ogni rata
+- `due_date` ascendenti per `position` crescenti
+- almeno 1 rata se `installments` esiste; o 0 rate (pagamento in soluzione unica → si usa `documents.due_date`)
+
+**Status derivato**:
+- Se `installments` vuoto: `documents.status` invariato (paid manualmente)
+- Se `installments` esiste: status auto-calcolato → `partially_paid` se almeno una rata è pagata ma non tutte; `paid` quando tutte hanno `paid_at`. Altrimenti resta in `delivered_sdi`/`issued`.
 
 ### 4.5 `document_sequences` (servizio per numerazione)
 
@@ -338,11 +369,12 @@ Validazione client + server: P.IVA (algoritmo modulo 11), CF (algoritmo formale)
 
 ### 6.5 Editor documento (preventivo/fattura)
 
-Layout single-column mobile-first, tre sezioni in una colonna:
+Layout single-column mobile-first, quattro sezioni in una colonna:
 
 1. **Header**: data emissione, scadenza, cliente (combobox cerca/aggiungi), tipo (preventivo|fattura), numero ("verrà assegnato all'emissione" se draft)
-2. **Righe**: lista descrizione + quantità + prezzo unitario, "+aggiungi riga", drag-handle riordinabile, totale di riga in tempo reale
-3. **Footer**: subtotale, bollo €2 (auto se imponibile > €77,47, override possibile), totale, note al cliente, condizioni di pagamento
+2. **Righe**: lista descrizione + quantità + prezzo unitario, "+aggiungi riga", reorder ↑/↓, totale di riga in tempo reale
+3. **Piano rate** (collassabile, default chiusa = "soluzione unica"): toggle "Rateizza", input "n° rate" + "data prima rata", bottone "Genera schedule" che crea N righe mensili con importo = `total_cents / N` (ultima rata aggiusta il resto). Ogni riga editabile (data + importo). Validazione live: somma rate vs totale, ogni rata ≥ €500 (configurabile).
+4. **Footer**: subtotale, bollo €2 (auto se imponibile > €77,47, override possibile), totale, note al cliente, condizioni di pagamento
 
 **Sticky bottom bar**:
 - Sempre: `Salva bozza`, `Anteprima PDF`
@@ -437,7 +469,7 @@ Builder TypeScript puro che assembla l'albero FatturaPA versione **1.2.2** (sche
 
 Struttura:
 - `FatturaElettronicaHeader` (DatiTrasmissione, CedentePrestatore = noi, CessionarioCommittente = cliente)
-- `FatturaElettronicaBody` (DatiGenerali, DatiBeniServizi righe + riepilogo IVA con N2.2, DatiPagamento)
+- `FatturaElettronicaBody` (DatiGenerali, DatiBeniServizi righe + riepilogo IVA con N2.2, DatiPagamento con `Condizioni: TP01` se 1 rata o `TP02` se più rate, e un `DettaglioPagamento` per ogni rata con `DataScadenzaPagamento` + `ImportoPagamento` + `ModalitaPagamento: MP05` (bonifico) + IBAN)
 
 Validazione: snapshot di un XML d'esempio in `__tests__/fattura-pa-xml.test.ts`. Niente XSD validation in runtime (lenta, dipende da libreria nativa) — basiamoci su test + il fatto che FiC valida lui stesso prima di inviare a SDI.
 
@@ -498,32 +530,28 @@ Usati sia nei form (validazione client) sia nei route handler (validazione serve
 ## 12. Ciclo di vita documento (state machine)
 
 ```
-            ┌──────────────────────────────────────┐
-            │                                      │
-            ▼                                      │
-        ┌───────┐  issue   ┌────────┐ transmit  ┌──┴────────┐
-quote:  │ draft ├─────────►│ issued │ (n/a)     │           │
-        └───────┘          └────────┘            │           │
-                                                 │           │
-        ┌───────┐  issue   ┌────────┐ transmit  ┌────────────┴┐
-inv:    │ draft ├─────────►│ issued ├──────────►│  sent_sdi   │
-        └───────┘          └────────┘            └──────┬─────┘
-                                                        │
-                                          webhook FiC   ▼
-                                          ┌──────────────────────┐
-                                          │ delivered_sdi        │
-                                          │   o rejected_sdi     │
-                                          └────────────┬─────────┘
-                                                       │ pagamento ricevuto (manuale)
-                                                       ▼
-                                                  ┌─────────┐
-                                                  │  paid   │
-                                                  └─────────┘
+quote: draft → issued (manuale) → cancelled
+
+invoice:
+  draft
+    └─ issue → issued
+                 └─ transmit → sent_sdi
+                                 └─ webhook → delivered_sdi | rejected_sdi
+                                                    │
+                                                    ├─ rata segnata pagata → partially_paid
+                                                    └─ tutte le rate pagate → paid
+
+  cancelled raggiungibile da qualunque stato non-paid.
 ```
 
-`cancelled` raggiungibile da qualunque stato non-paid (mark-as-cancelled UI).
+**Transizioni di pagamento (auto)**:
+- Quando segno una rata `paid_at = now()` (UI checkbox): trigger applicativo ricalcola lo status del documento:
+  - tutte le rate hanno `paid_at` → `paid`
+  - alcune sì alcune no → `partially_paid`
+  - nessuna → status invariato (resta `delivered_sdi`/`issued`)
+- Se il documento non ha rate (soluzione unica): bottone "Marca come pagata" su UI → `paid` diretto.
 
-Edits permessi solo in `draft`. `issued` è immutabile.
+Edits permessi: documento intero solo in `draft`; `installments[].paid_at` e `payment_reference` editabili anche dopo `issued`.
 
 ---
 
@@ -603,16 +631,17 @@ FIC_WEBHOOK_SECRET=
 Il piano (`writing-plans` skill, prossimo step) dovrà coprire, in fasi indipendenti dove possibile:
 
 1. **Foundation**: env vars, `requireAdmin()`, layout admin con redirect/404, dashboard placeholder
-2. **DB schema**: migrazione SQL, RLS, seed `admin_settings`
+2. **DB schema**: migrazione SQL, RLS, seed `admin_settings` (incluso `min_installment_cents` e tabella `document_installments`)
 3. **Anagrafica clienti**: route + UI + validatori
-4. **Editor documento (draft only)**: route + UI + calcolo totali, no FiC, no PDF
-5. **PDF rendering**: template `@react-pdf/renderer` + signed URL
-6. **XML FatturaPA**: builder + test snapshot
-7. **OAuth FiC**: start/callback + storage token + UI connect in `/admin/impostazioni`
-8. **Emissione + trasmissione SDI**: `issue` + `transmit` route, integrazione FiC client
-9. **Webhook FiC**: handler + signature validation + status sync
-10. **Dashboard reale**: KPI + ultimi documenti + "da fare"
-11. **Polish**: anteprima PDF, duplica documento, archive cliente, mobile QA
+4. **Editor documento (draft only)**: route + UI + calcolo totali + piano rate, no FiC, no PDF
+5. **Logica rate**: schedule generator + validator (somma, minimo, ordine) + status auto
+6. **PDF rendering**: template `@react-pdf/renderer` con tabella rate + signed URL
+7. **XML FatturaPA**: builder + multiple `DettaglioPagamento` per rate + test snapshot
+8. **OAuth FiC**: start/callback + storage token + UI connect in `/admin/impostazioni`
+9. **Emissione + trasmissione SDI**: `issue` + `transmit` route, integrazione FiC client
+10. **Webhook FiC**: handler + signature validation + status sync
+11. **Dashboard reale**: KPI + ultimi documenti + "da fare" + "rate in scadenza/scadute"
+12. **Polish**: anteprima PDF, duplica documento, archive cliente, mark-rata-paid, mobile QA
 
 ---
 
