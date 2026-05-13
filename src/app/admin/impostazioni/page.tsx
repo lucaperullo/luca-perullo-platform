@@ -17,9 +17,18 @@ export default async function ImpostazioniPage() {
       </div>
       <div className="mt-12 rounded-md border border-border bg-bg-alt p-4">
         <p className="font-mono text-[10.5px] uppercase tracking-[0.12em] text-fg-soft">Fatture in Cloud</p>
-        <p className="mt-2 text-[13.5px] text-fg-muted">
-          Connessione SDI: arriverà nel Task 12 del piano. Per ora: niente trasmissione.
-        </p>
+        {settings.fic_access_token ? (
+          <p className="mt-2 text-[13.5px] text-fg-muted">
+            Connesso. Token scade il {settings.fic_token_expires_at ?? "—"}.
+          </p>
+        ) : (
+          <a
+            href="/api/admin/fic/oauth/start"
+            className="press mt-3 inline-block rounded-md border border-fg bg-fg px-4 py-2 font-mono text-[11.5px] uppercase tracking-[0.08em] text-bg"
+          >
+            Connetti Fatture in Cloud
+          </a>
+        )}
       </div>
     </>
   );
