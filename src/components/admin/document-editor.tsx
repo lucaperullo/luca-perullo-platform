@@ -6,6 +6,7 @@ import type { Client } from "@/lib/admin/clients";
 import type { Document, DocumentItem, Installment } from "@/lib/admin/documents";
 import { computeLineTotal, computeTotals } from "@/lib/admin/totals";
 import { InstallmentsSection } from "./installments-section";
+import { InstallmentsPaidList } from "./installments-paid-list";
 import type { InstallmentRow } from "@/lib/admin/installments";
 
 type Props = {
@@ -151,12 +152,19 @@ export function DocumentEditor({ document, items: initialItems, installments: in
         </label>
       </section>
 
-      <InstallmentsSection
-        totalCents={totals.total_cents}
-        minInstallmentCents={settings.min_installment_cents}
-        initial={installments}
-        onChange={setInstallments}
-      />
+      {document.status === "draft" ? (
+        <InstallmentsSection
+          totalCents={totals.total_cents}
+          minInstallmentCents={settings.min_installment_cents}
+          initial={installments}
+          onChange={setInstallments}
+        />
+      ) : initialInstallments.length > 0 ? (
+        <section className="rounded-md border border-border p-4">
+          <h2 className="font-mono text-[10.5px] uppercase tracking-[0.12em] text-fg-soft">Piano rate</h2>
+          <div className="mt-3"><InstallmentsPaidList docId={document.id} installments={initialInstallments} /></div>
+        </section>
+      ) : null}
 
       <section className="rounded-md border border-border p-4">
         <h2 className="font-mono text-[10.5px] uppercase tracking-[0.12em] text-fg-soft">Note al cliente</h2>
