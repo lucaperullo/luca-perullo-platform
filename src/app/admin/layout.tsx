@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { requireAdmin } from "@/lib/admin/auth";
+import { AdminShell } from "@/components/admin/admin-shell";
 
 export const metadata: Metadata = {
   title: "Admin · Luca Perullo",
@@ -14,9 +15,5 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   await requireAdmin();
-  return (
-    <div className="mx-auto w-full max-w-[var(--container-frame)] px-4 sm:px-6">
-      {children}
-    </div>
-  );
+  return <AdminShell>{children}</AdminShell>;
 }
